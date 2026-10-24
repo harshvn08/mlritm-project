@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: atlas-criminal-network-analysis
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: atlas-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: STORAGE_BACKEND
+        value: sqlite
+      - key: ATLAS_DATA_DIR
+        value: /var/data
+      - key: ATLAS_SQLITE_PATH
+        value: /var/data/atlas_local.sqlite3
+      - key: ATLAS_UPLOAD_DIR
+        value: /var/data/uploads
+      - key: USERS_FILE_PATH
+        value: /var/data/users.json
+      - key: BLOCKCHAIN_LEDGER_PATH
+        value: /var/data/blockchain_ledger.json

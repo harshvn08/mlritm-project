@@ -1,0 +1,2800 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — Crime & Case Graph Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #070a12;
+  --bg1: #0c111e;
+  --bg2: #101728;
+  --surface: #141d33;
+  --surface-hover: #192542;
+  --surface-active: #1f2e52;
+  --glass: rgba(18, 26, 46, 0.72);
+  --glass-strong: rgba(20, 29, 51, 0.92);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: #00d2ff;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --text-faint: #64748b;
+  --accent: #00d2ff;
+  --accent-glow: rgba(0, 210, 255, 0.28);
+  --accent-gradient: linear-gradient(135deg, #00d2ff, #6366f1);
+  --accent-secondary: #6366f1;
+  --cyan: #06b6d4;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #f43f5e;
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.3);
+  --danger-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+  --neu-light: rgba(255, 255, 255, 0.05);
+  --neu-dark: rgba(0, 0, 0, 0.45);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-soft: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+  --shadow-card: 0 4px 24px -8px rgba(0, 0, 0, 0.55);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --graph-bg: rgba(6, 9, 17, 0.85);
+
+  /* Dynamic Tag Tokens (Dark Mode) */
+  --tag-crit-bg: rgba(244, 63, 94, 0.18);
+  --tag-crit-color: #fda4af;
+  --tag-crit-border: rgba(244, 63, 94, 0.35);
+
+  --tag-high-bg: rgba(245, 158, 11, 0.18);
+  --tag-high-color: #fde68a;
+  --tag-high-border: rgba(245, 158, 11, 0.35);
+
+  --tag-med-bg: rgba(6, 182, 212, 0.16);
+  --tag-med-color: #67e8f9;
+  --tag-med-border: rgba(6, 182, 212, 0.35);
+
+  --tag-low-bg: rgba(16, 185, 129, 0.16);
+  --tag-low-color: #6ee7b7;
+  --tag-low-border: rgba(16, 185, 129, 0.35);
+
+  --tag-open-bg: rgba(0, 210, 255, 0.15);
+  --tag-open-color: var(--accent);
+  --tag-open-border: var(--accent-glow);
+
+  --tag-closed-bg: rgba(167, 139, 250, 0.16);
+  --tag-closed-color: #c4b5fd;
+  --tag-closed-border: rgba(167, 139, 250, 0.35);
+}
+
+[data-theme="light"] {
+  --bg0: #f1f5f9;
+  --bg1: #f8fafc;
+  --bg2: #e2e8f0;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --surface-active: #e2e8f0;
+  --glass: rgba(255, 255, 255, 0.88);
+  --glass-strong: rgba(255, 255, 255, 0.96);
+  --border: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.22);
+  --border-focus: #0284c7;
+  --text: #0f172a;
+  --text-dim: #334155;
+  --text-faint: #64748b;
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.22);
+  --accent-gradient: linear-gradient(135deg, #0284c7, #4f46e5);
+  --accent-secondary: #4f46e5;
+  --cyan: #0891b2;
+  --green: #059669;
+  --amber: #d97706;
+  --red: #dc2626;
+  --danger: #dc2626;
+  --danger-glow: rgba(220, 38, 38, 0.22);
+  --danger-gradient: linear-gradient(135deg, #dc2626, #b91c1c);
+  --neu-light: rgba(255, 255, 255, 0.8);
+  --neu-dark: rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 20px 48px -15px rgba(15, 23, 42, 0.14);
+  --shadow-card: 0 4px 20px -4px rgba(15, 23, 42, 0.08);
+  --graph-bg: #f8fafc;
+
+  /* Dynamic Tag Tokens (Light Mode - High Contrast WCAG AA) */
+  --tag-crit-bg: rgba(220, 38, 38, 0.12);
+  --tag-crit-color: #991b1b;
+  --tag-crit-border: rgba(220, 38, 38, 0.32);
+
+  --tag-high-bg: rgba(217, 119, 6, 0.12);
+  --tag-high-color: #92400e;
+  --tag-high-border: rgba(217, 119, 6, 0.32);
+
+  --tag-med-bg: rgba(2, 132, 199, 0.14);
+  --tag-med-color: #0369a1;
+  --tag-med-border: rgba(2, 132, 199, 0.36);
+
+  --tag-low-bg: rgba(5, 150, 105, 0.12);
+  --tag-low-color: #065f46;
+  --tag-low-border: rgba(5, 150, 105, 0.32);
+
+  --tag-open-bg: rgba(2, 132, 199, 0.14);
+  --tag-open-color: #0284c7;
+  --tag-open-border: rgba(2, 132, 199, 0.36);
+
+  --tag-closed-bg: rgba(124, 58, 237, 0.12);
+  --tag-closed-color: #5b21b6;
+  --tag-closed-border: rgba(124, 58, 237, 0.32);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  background: var(--bg0);
+  background-image:
+    radial-gradient(1100px 750px at 90% -10%, var(--accent-glow), transparent 60%),
+    radial-gradient(900px 650px at -10% 25%, rgba(99, 102, 241, 0.15), transparent 55%),
+    linear-gradient(165deg, var(--bg0), var(--bg1) 45%, var(--bg2));
+  background-attachment: fixed;
+  overflow-x: hidden;
+  transition: background .25s ease, color .25s ease;
+}
+
+a { color: var(--accent); text-decoration: none; }
+button { font-family: var(--font); cursor: pointer; border: none; outline: none; }
+input, select, textarea { font-family: var(--font); color: var(--text); }
+
+/* Ambient blobs */
+.blob { position: fixed; border-radius: 50%; filter: blur(95px); opacity: .4; z-index: 0; pointer-events: none; }
+.blob-1 { width: 440px; height: 440px; background: #00d2ff; top: -140px; right: -70px; }
+.blob-2 { width: 380px; height: 380px; background: #6366f1; bottom: -120px; left: -50px; opacity: .3; }
+.noise {
+  position: fixed; inset: 0; opacity: .025; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* App shell & sidebar */
+.app { position: relative; z-index: 1; display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
+.sidebar {
+  position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+  padding: 22px 16px; border-right: 1px solid var(--border);
+  background: var(--glass);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.brand { display: flex; align-items: center; gap: 12px; padding: 6px 10px 20px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.brand-logo {
+  width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--accent-gradient);
+  box-shadow: 0 8px 24px -6px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.brand-logo svg { width: 24px; height: 24px; stroke: #fff; }
+.brand-name { font-weight: 800; font-size: 19px; letter-spacing: -0.4px; }
+.brand-sub { font-size: 11px; color: var(--text-faint); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+
+.nav-label { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1.5px; padding: 8px 12px; font-weight: 700; }
+.nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 13px; color: var(--text-dim);
+  font-size: 13.5px; font-weight: 600; transition: .18s; position: relative; border: 1px solid transparent; background: transparent;
+  width: 100%; text-align: left;
+}
+.nav-item:hover { color: var(--text); background: var(--surface-hover); }
+.nav-item.active {
+  color: #fff; border-color: var(--border-strong);
+  background: var(--accent-gradient);
+  box-shadow: var(--shadow-card), 0 4px 16px -4px var(--accent-glow);
+}
+[data-theme="light"] .nav-item.active { color: #fff; }
+.nav-item svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+
+.side-foot { padding: 14px 10px 6px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-faint); line-height: 1.6; }
+.side-foot-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px; }
+
+/* Main Content */
+.main { padding: 26px 36px 60px; max-width: 1280px; width: 100%; margin: 0 auto; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+.topbar-title h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+.topbar-title p { color: var(--text-dim); font-size: 13.5px; margin-top: 4px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+  display: flex; align-items: center; gap: 9px; padding: 8px 16px; border-radius: 40px; font-size: 13px; font-weight: 600;
+  background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(12px); box-shadow: var(--shadow-card);
+}
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); }
+.status-dot.ok { background: var(--green); box-shadow: 0 0 12px var(--green); }
+.status-dot.bad { background: var(--red); box-shadow: 0 0 12px var(--red); }
+.status-meta { font-weight: 500; color: var(--text-faint); font-size: 12px; margin-left: 4px; font-family: var(--mono); }
+
+/* Theme Toggle Button */
+.theme-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--border); color: var(--text-dim); transition: .2s;
+}
+.theme-btn:hover { color: var(--text); border-color: var(--accent); transform: translateY(-1px); }
+.theme-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+
+/* Stat cards & Grid */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 26px; }
+.stat-card {
+  position: relative; padding: 22px; border-radius: var(--radius); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: var(--shadow-card); transition: .22s;
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+.stat-card::after {
+  content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, var(--glow, rgba(0, 210, 255, 0.2)), transparent 70%); opacity: .6;
+}
+.stat-label { font-size: 11.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.stat-value { font-size: 32px; font-weight: 800; margin-top: 8px; letter-spacing: -1px; display: flex; align-items: baseline; gap: 6px; }
+.stat-value small { font-size: 13.5px; color: var(--text-faint); font-weight: 500; }
+.stat-foot { font-size: 12px; color: var(--text-faint); margin-top: 6px; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 22px; transition: .2s;
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.card-title { font-size: 16.5px; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
+.card-title svg { width: 20px; height: 20px; stroke: var(--accent); }
+.card-desc { color: var(--text-faint); font-size: 12.5px; margin-top: 4px; }
+
+/* Buttons & Inputs */
+.neu-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 600; color: var(--text);
+  background: var(--surface-hover); border: 1px solid var(--border);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.2); transition: .18s;
+}
+.neu-btn:hover { transform: translateY(-1px); border-color: var(--border-strong); background: var(--surface-active); color: var(--text); }
+.neu-btn:active { transform: translateY(1px); }
+.neu-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+.neu-btn.primary {
+  background: var(--accent-gradient); color: #fff; border-color: transparent;
+  box-shadow: 0 6px 20px -4px var(--accent-glow);
+}
+.neu-btn.primary:hover { box-shadow: 0 8px 24px -4px var(--accent-glow); filter: brightness(1.05); }
+.neu-btn.ghost { background: transparent; border-color: var(--border); color: var(--text-dim); }
+.neu-btn.ghost:hover { background: var(--surface-hover); color: var(--text); }
+.neu-btn.danger {
+  background: var(--danger-gradient); color: #fff; border-color: transparent;
+  box-shadow: 0 6px 20px -4px var(--danger-glow);
+}
+.neu-btn.danger:hover { box-shadow: 0 8px 24px -4px var(--danger-glow); filter: brightness(1.08); }
+.neu-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+.field label { font-size: 11.5px; color: var(--text-dim); font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+.control {
+  padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 13.5px;
+  background: var(--bg1); outline: none; transition: .2s; color: var(--text);
+}
+.control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.control::placeholder { color: var(--text-faint); }
+select.control option { background: var(--bg1); color: var(--text); }
+.row { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--surface); }
+thead th {
+  color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  text-align: left; padding: 13px 16px; font-weight: 700; border-bottom: 1px solid var(--border);
+  background: var(--bg1);
+}
+tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+tbody tr { transition: .15s; }
+tbody tr:hover { background: var(--surface-hover); }
+tbody tr:hover td { color: var(--text); }
+.mono { font-family: var(--mono); font-size: 12px; }
+
+/* Badges / Tags with High Contrast in Both Dark and Light Modes */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  letter-spacing: .4px; text-transform: uppercase; transition: all 0.2s ease;
+}
+.tag.crit { background: var(--tag-crit-bg); color: var(--tag-crit-color); border: 1px solid var(--tag-crit-border); }
+.tag.high { background: var(--tag-high-bg); color: var(--tag-high-color); border: 1px solid var(--tag-high-border); }
+.tag.med, .tag.medium { background: var(--tag-med-bg); color: var(--tag-med-color); border: 1px solid var(--tag-med-border); }
+.tag.low { background: var(--tag-low-bg); color: var(--tag-low-color); border: 1px solid var(--tag-low-border); }
+.tag.open { background: var(--tag-open-bg); color: var(--tag-open-color); border: 1px solid var(--tag-open-border); }
+.tag.closed { background: var(--tag-closed-bg); color: var(--tag-closed-color); border: 1px solid var(--tag-closed-border); }
+.tag.plain { background: var(--surface-hover); color: var(--text-dim); border: 1px solid var(--border); }
+
+/* Inspect Dossier Grid & Glass Elements */
+.inspect-container {
+  animation: glassReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.inspect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.inspect-subcard {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+.inspect-subcard:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px -4px var(--shadow-card);
+}
+.inspect-subcard-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.inspect-subcard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  transition: all 0.18s ease;
+}
+.evidence-chip:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  transform: translateX(2px);
+}
+.actor-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+.actor-pill.suspect { border-left: 3px solid var(--red); }
+.actor-pill.victim { border-left: 3px solid var(--cyan); }
+.overlap-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+[data-theme="light"] .overlap-banner {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+.overlap-banner.clean {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+[data-theme="light"] .overlap-banner.clean {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.3);
+}
+@keyframes glassReveal {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Results & List rows */
+.result-item {
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; transition: .18s;
+  background: var(--surface);
+}
+.result-item:hover { border-color: var(--accent); background: var(--surface-hover); transform: translateX(3px); }
+.result-main { display: flex; flex-direction: column; gap: 4px; }
+.result-name { font-weight: 700; color: var(--text); font-size: 14px; }
+.result-sub { font-size: 12px; color: var(--text-faint); }
+
+.list-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; gap: 12px; border-bottom: 1px solid var(--border); }
+.list-row:hover { background: var(--surface-hover); }
+.list-row .l-name { font-weight: 600; color: var(--text); font-size: 14px; }
+.list-row .l-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+
+/* Graph Canvas & Legend */
+#graph { width: 100%; height: 560px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--graph-bg); overflow: hidden; display: flex; position: relative; }
+#graphCanvas { flex: 1; height: 100%; position: relative; min-width: 0; }
+.graph-ai-box {
+  width: 340px; height: 100%; border-left: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; z-index: 5; flex-shrink: 0;
+}
+.graph-ai-box.collapsed { display: none; }
+.graph-ai-header {
+  padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg1);
+}
+.graph-ai-body {
+  flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+}
+.graph-ai-footer {
+  padding: 9px 12px; border-top: 1px solid var(--border); background: var(--bg1);
+}
+.ai-msg {
+  padding: 9px 12px; border-radius: 9px; font-size: 12px; line-height: 1.5; max-width: 95%; word-break: break-word;
+}
+.ai-msg.bot {
+  background: var(--bg1); border: 1px solid var(--border); align-self: flex-start; color: var(--text);
+}
+.ai-msg.user {
+  background: rgba(0, 210, 255, 0.12); border: 1px solid rgba(0, 210, 255, 0.28); align-self: flex-end; color: var(--text); font-weight: 500;
+}
+.ai-msg-hdr {
+  font-weight: 700; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 5px; display: flex; align-items: center; gap: 5px;
+}
+.ai-quick-chips {
+  margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;
+}
+.ai-chip {
+  padding: 4px 7px; border-radius: 6px; font-size: 11px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer; transition: all 0.15s ease; text-align: left;
+}
+.ai-chip:hover {
+  background: rgba(0, 210, 255, 0.15); color: var(--accent); border-color: rgba(0, 210, 255, 0.4);
+}
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 12px; color: var(--text-dim); }
+.legend .lg { display: flex; align-items: center; gap: 7px; }
+.legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Skeleton */
+@keyframes shine { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+.skeleton {
+  border-radius: 10px; background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+  background-size: 200% 100%; animation: shine 1.4s infinite;
+}
+.sk-row { height: 22px; margin: 12px 0; border-radius: 8px; }
+
+/* Toasts */
+#toasts { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast {
+  padding: 13px 18px; border-radius: 13px; font-size: 13.5px; font-weight: 600; color: var(--text); min-width: 280px; max-width: 420px;
+  background: var(--glass-strong); border: 1px solid var(--border-strong); backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-soft); animation: slidein .3s ease; pointer-events: auto;
+}
+.toast.ok { border-left: 4px solid var(--green); }
+.toast.err { border-left: 4px solid var(--red); }
+.toast.info { border-left: 4px solid var(--accent); }
+@keyframes slidein { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast.out { transition: .3s ease; transform: translateX(120%); opacity: 0; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(5, 8, 16, 0.75); backdrop-filter: blur(8px);
+  z-index: 2000; display: grid; place-items: center; padding: 20px; opacity: 0; pointer-events: none; transition: .22s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal {
+  width: 100%; max-width: 650px; max-height: 88vh; overflow-y: auto; border-radius: var(--radius); padding: 28px;
+  background: var(--surface); border: 1px solid var(--border-strong); box-shadow: var(--shadow-soft);
+}
+.modal h3 { font-weight: 800; font-size: 20px; letter-spacing: -.4px; margin-bottom: 16px; }
+.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-top: 8px; }
+.kv div { background: var(--bg1); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); }
+.kv .k { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; }
+.kv .v { font-size: 13.5px; margin-top: 4px; color: var(--text); word-break: break-word; }
+
+/* Confirmation Dialog Inside Modal */
+.confirm-box { text-align: left; }
+.confirm-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.confirm-header svg { width: 28px; height: 28px; stroke: var(--danger); flex-shrink: 0; }
+.confirm-title { font-size: 18px; font-weight: 800; }
+.confirm-body { font-size: 14px; color: var(--text-dim); line-height: 1.6; margin-bottom: 22px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 12px; }
+
+/* Empty state */
+.empty {
+  padding: 44px 20px; text-align: center; color: var(--text-faint); font-size: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+}
+.empty svg { width: 36px; height: 36px; stroke: var(--text-faint); opacity: .6; }
+
+/* Responsive */
+.hamburger { display: none; }
+@media(max-width: 960px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 270px; transform: translateX(-100%); transition: .28s ease; z-index: 1000; }
+  .sidebar.open { transform: translateX(0); }
+  .hamburger { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+  .main { padding: 18px 18px 50px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900; opacity: 0; pointer-events: none; transition: .28s; }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
+
+.fade-in { animation: fadeIn .35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<!-- External Libraries (React 18, Vis-Network, Chart.js, Babel) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="noise"></div>
+
+<!-- React App Container Root -->
+<div id="root"></div>
+
+<!-- React Application Script (Babel Standalone JSX) -->
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// ---------- API Helper ----------
+const API = {
+  formatError(d, status) {
+    if (!d) return `HTTP ${status}`;
+    if (typeof d === 'string') return d;
+    if (d.detail) {
+      if (typeof d.detail === 'string') return d.detail;
+      if (Array.isArray(d.detail)) {
+        return d.detail.map(e => (e.loc ? e.loc.filter(l => l !== 'body').join('.') + ': ' : '') + e.msg).join('; ');
+      }
+      if (typeof d.detail === 'object') return d.detail.message || JSON.stringify(d.detail);
+    }
+    if (d.message) return d.message;
+    return `HTTP ${status}`;
+  },
+  async get(url) {
+    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    let d;
+    try { d = await r.json(); } catch(e) { d = null; }
+    if (!r.ok) throw new Error(this.formatError(d, r.status));
+    return d;
+  },
+  async post(url, body = {}) {
+    return this.send(url, {
+      method: 'POST',
+      body: typeof body === 'string' ? body : JSON.stringify(body)
+    });
+  },
+  async send(url, opts = {}) {
+    const headers = opts.form ? {} : { 'Content-Type': 'application/json' };
+    if (opts.headers) Object.assign(headers, opts.headers);
+    const r = await fetch(url, { ...opts, headers });
+    let d;
+    try { d = await r.json(); } catch(e) { d = null; }
+    if (!r.ok) throw new Error(this.formatError(d, r.status));
+    return d;
+  },
+  async delete(url, body = null) {
+    const opts = { method: 'DELETE' };
+    if (body) {
+      opts.headers = { 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify(body);
+    }
+    return this.send(url, opts);
+  }
+};
+
+// ---------- Utility Helpers ----------
+function esc(s) {
+  return String(s == null ? '' : s);
+}
+
+const LABEL_COLOR = {
+  Person: '#6366f1',
+  Phone: '#00d2ff',
+  BankAccount: '#10b981',
+  Vehicle: '#f59e0b',
+  SocialHandle: '#a855f7',
+  IPAddress: '#f43f5e',
+  Location: '#fb7185',
+  CellTower: '#14b8a6',
+  FIR: '#ec4899',
+  PriorCase: '#94a3b8',
+  Case: '#38bdf8',
+  Transaction: '#10b981',
+  SourceRecord: '#64748b',
+  Organization: '#3b82f6'
+};
+
+function getNodeLevel(labels) {
+  if (!labels || !labels.length) return 6;
+  if (labels.includes('Case')) return 1;
+  if (labels.includes('FIR') || labels.includes('PriorCase') || labels.includes('SourceRecord')) return 2;
+  if (labels.includes('Person')) return 3;
+  if (labels.some(l => ['Phone', 'BankAccount', 'Vehicle', 'SocialHandle'].includes(l))) return 4;
+  if (labels.includes('Transaction')) return 5;
+  return 6;
+}
+
+function getDeterministicSeed(str) {
+  let hash = 42;
+  const s = String(str || 'atlas_seed');
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) || 42;
+}
+
+// ---------- Navigation Config ----------
+const NAV = [
+  { id: 'overview', label: 'Command Center', icon: 'M4 13 9 4l5 9H4Zm6 0 5-8 5 8h-10Z' },
+  { id: 'graph', label: 'Graph Explorer', icon: 'M12 3a2 2 0 0 1 2 2c0 .4-.1.8-.3 1.1l3.4 5.4c.3-.1.6-.2.9-.2a2 2 0 1 1 0 4c-.3 0-.6-.1-.9-.2l-3.4 5.4c.2.3.3.7.3 1.1a2 2 0 1 1-3.6-1.1L8.9 15.5c-.3.1-.6.2-.9.2a2 2 0 1 1 0-4c.3 0 .6.1.8.2l3.4-5.4c-.2-.3-.3-.7-.3-1.1a2 2 0 0 1 2-2Z' },
+  { id: 'search', label: 'Entity Search', icon: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35' },
+  { id: 'path', label: 'Shortest Path', icon: 'M4 5h12m0 0-3-3m3 3-3 3M4 19h12m0 0-3-3m3 3-3 3M8 8v8' },
+  { id: 'rankings', label: 'Rankings', icon: 'M3 17l4-4 4 4 5-5 4 4' },
+  { id: 'insights', label: 'Pattern Insights', icon: 'M12 3l1.9 5.6L19 10l-5.1 1.9L12 17.5l-1.9-5.6L5 10l5.1-1.4L12 3Z' },
+  { id: 'blockchain', label: 'Chain of Custody', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+  { id: 'cases', label: 'Case Registry', icon: 'M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z' },
+  { id: 'ingest', label: 'Data Ingestion', icon: 'M12 5v14m-7-7h14' }
+];
+
+const TITLES = {
+  overview: ['Command Center', 'Ecosystem health metrics, top entities and active investigations'],
+  graph: ['Graph Explorer', 'Interactive topological network visualization'],
+  search: ['Entity Search', 'Fast multi-property search across people, phones, bank accounts, VINs'],
+  path: ['Shortest Path Analysis', 'Trace shortest association paths between suspect and victim'],
+  rankings: ['Centrality Rankings', 'Degree, PageRank, betweenness, and cross-case relevance'],
+  insights: ['Forensic Insights', 'Automated graph intelligence and anomaly detection'],
+  blockchain: ['Chain of Custody Ledger', 'Cryptographic SHA-256 Merkle block proof & anti-tampering evidence verification'],
+  cases: ['Case Registry', 'Manage cases, entity breakdowns, and case deletion'],
+  ingest: ['Data Ingestion', 'Ingest structured case JSON, CSV files, or raw narratives']
+};
+
+// ---------- Main React Application Component ----------
+function App() {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('atlas_theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+  const [view, setView] = useState(() => {
+    const h = location.hash.replace('#', '');
+    return NAV.find(n => n.id === h) ? h : 'overview';
+  });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [health, setHealth] = useState(null);
+  const [cases, setCases] = useState([]);
+  const [selectedCase, setSelectedCase] = useState(null);
+  const [insights, setInsights] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const [modal, setModal] = useState(null); // { type, data }
+
+  // Apply theme to html root
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('atlas_theme', theme);
+  }, [theme]);
+
+  // Sync Hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      const h = location.hash.replace('#', '');
+      if (NAV.find(n => n.id === h)) setView(h);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const changeView = (newView) => {
+    setView(newView);
+    setSidebarOpen(false);
+    location.hash = newView;
+  };
+
+  const addToast = useCallback((msg, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, msg, type, out: false }]);
+    setTimeout(() => {
+      setToasts(prev => prev.map(t => t.id === id ? { ...t, out: true } : t));
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, 350);
+    }, type === 'err' ? 6500 : 3800);
+  }, []);
+
+  // Health check
+  const fetchHealth = useCallback(async () => {
+    try {
+      const h = await API.get('/api/health');
+      setHealth(h);
+    } catch (e) {
+      setHealth(null);
+    }
+  }, []);
+
+  // Load cases
+  const fetchCases = useCallback(async () => {
+    try {
+      const list = await API.get('/api/cases?limit=200');
+      setCases(list);
+      return list;
+    } catch (e) {
+      addToast(`Failed to load cases: ${e.message}`, 'err');
+      return [];
+    }
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchHealth();
+    fetchCases();
+    const interval = setInterval(fetchHealth, 30000);
+    return () => clearInterval(interval);
+  }, [fetchHealth, fetchCases]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+
+  // Open Entity Modal
+  const openEntityModal = useCallback(async (entityId) => {
+    try {
+      const e = await API.get(`/api/entities/${encodeURIComponent(entityId)}`);
+      setModal({ type: 'entity', data: e });
+    } catch (err) {
+      addToast(`Could not load entity: ${err.message}`, 'err');
+    }
+  }, [addToast]);
+
+  // Open AI Insights Modal
+  const openAiDossierModal = useCallback((caseId, caseName) => {
+    setModal({ type: 'ai_dossier', data: { caseId, caseName } });
+  }, []);
+
+  // Open Reset DB Confirmation
+  const promptResetDatabase = useCallback(() => {
+    setModal({ type: 'reset_db' });
+  }, []);
+
+  // Open Delete Case Confirmation
+  const promptDeleteCase = useCallback((caseId, caseName) => {
+    setModal({ type: 'delete_case', data: { caseId, caseName } });
+  }, []);
+
+  return (
+    <React.Fragment>
+      {/* Sidebar Mobile Overlay (Must stay OUTSIDE .app grid) */}
+      <div className={`overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
+
+      <div className="app">
+        {/* Sidebar */}
+        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <div className="brand">
+            <div className="brand-logo">
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="6" cy="6" r="3"/><circle cx="18" cy="7" r="3"/><circle cx="12" cy="18" r="3"/>
+                <path d="M8.7 8.1 10 10M15.2 9l-.6 2M10 12.6l1 2.4"/>
+              </svg>
+            </div>
+            <div>
+              <div className="brand-name">Atlas</div>
+              <div className="brand-sub">Graph Intelligence</div>
+            </div>
+          </div>
+          <div className="nav-label">Analytics Modules</div>
+          <nav className="nav">
+            {NAV.map(n => (
+              <button key={n.id} className={`nav-item ${view === n.id ? 'active' : ''}`} onClick={() => changeView(n.id)}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={n.icon}/></svg>
+                <span>{n.label}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="side-foot">
+            <div>Case-Graph Intelligence Engine</div>
+            <div className="mono" style={{color:'var(--text-faint)', fontSize:'10.5px'}}>Neo4j GDS · FastAPI React</div>
+            <div className="side-foot-actions">
+              <button className="neu-btn ghost danger" style={{padding:'6px 10px', fontSize:'11px'}} onClick={promptResetDatabase}>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Reset DB
+              </button>
+              <button className="theme-btn" onClick={toggleTheme} title="Toggle Light/Dark Theme">
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {theme === 'dark' ? (
+                    <React.Fragment>
+                      <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </React.Fragment>
+                  ) : (
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="main">
+          <div className="topbar">
+            <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
+              <button className="hamburger" onClick={() => setSidebarOpen(prev => !prev)}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+              </button>
+              <div className="topbar-title">
+                <h1>{TITLES[view]?.[0] || 'Command Center'}</h1>
+                <p>{TITLES[view]?.[1] || 'Crime & Case Graph Intelligence'}</p>
+              </div>
+            </div>
+            <div className="topbar-actions">
+              <div className="status-pill">
+                <span className={`status-dot ${health ? 'ok' : 'bad'}`}></span>
+                <span>{health ? 'Database Active' : 'Connecting…'}</span>
+                {health && <span className="status-meta">{Math.round(health.latency_ms)}ms</span>}
+              </div>
+              <button className="theme-btn" onClick={toggleTheme} title="Toggle Theme">
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {theme === 'dark' ? (
+                    <circle cx="12" cy="12" r="5"/>
+                  ) : (
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* View Component Dispatcher */}
+          <div key={view} className="fade-in">
+            {view === 'overview' && <OverviewModule cases={cases} health={health} insights={insights} setInsights={setInsights} changeView={changeView} openAiDossier={openAiDossierModal} />}
+            {view === 'graph' && <GraphExplorerModule cases={cases} selectedCase={selectedCase} setSelectedCase={setSelectedCase} openEntityModal={openEntityModal} addToast={addToast} theme={theme} />}
+            {view === 'search' && <EntitySearchModule openEntityModal={openEntityModal} addToast={addToast} />}
+            {view === 'path' && <ShortestPathModule openEntityModal={openEntityModal} addToast={addToast} />}
+            {view === 'rankings' && <RankingsModule cases={cases} openEntityModal={openEntityModal} addToast={addToast} />}
+            {view === 'insights' && <PatternInsightsModule cases={cases} insights={insights} setInsights={setInsights} openAiDossier={openAiDossierModal} addToast={addToast} />}
+            {view === 'blockchain' && <BlockchainModule cases={cases} fetchCases={fetchCases} addToast={addToast} />}
+            {view === 'cases' && <CaseRegistryModule cases={cases} fetchCases={fetchCases} selectedCase={selectedCase} setSelectedCase={setSelectedCase} openAiDossier={openAiDossierModal} promptDeleteCase={promptDeleteCase} changeView={changeView} theme={theme} addToast={addToast} />}
+            {view === 'ingest' && <DataIngestionModule fetchCases={fetchCases} changeView={changeView} addToast={addToast} />}
+          </div>
+        </main>
+      </div>
+
+      {/* Toast Notifications */}
+      <div id="toasts">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type} ${t.out ? 'out' : ''}`}>{t.msg}</div>
+        ))}
+      </div>
+
+      {/* Global Modal Overlay */}
+      {modal && (
+        <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) setModal(null); }}>
+          <div className="modal">
+            {modal.type === 'entity' && <EntityModalContent data={modal.data} onClose={() => setModal(null)} openEntityModal={openEntityModal} />}
+            {modal.type === 'ai_dossier' && <AiDossierModalContent caseId={modal.data.caseId} caseName={modal.data.caseName} onClose={() => setModal(null)} />}
+            {modal.type === 'reset_db' && (
+              <ResetDbConfirmContent
+                onClose={() => setModal(null)}
+                addToast={addToast}
+                onSuccess={() => {
+                  fetchCases();
+                  setInsights([]);
+                  changeView('overview');
+                }}
+              />
+            )}
+            {modal.type === 'delete_case' && (
+              <DeleteCaseConfirmContent
+                caseId={modal.data.caseId}
+                caseName={modal.data.caseName}
+                onClose={() => setModal(null)}
+                addToast={addToast}
+                onSuccess={() => {
+                  fetchCases();
+                  if (selectedCase === modal.data.caseId) setSelectedCase(null);
+                }}
+              />
+            )}
+            {modal.type === 'insight_evidence' && <InsightEvidenceModalContent insight={modal.data} onClose={() => setModal(null)} />}
+          </div>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
+// ---------- Sub-Module: Command Center (Overview) ----------
+function OverviewModule({ cases, health, insights, setInsights, changeView, openAiDossier }) {
+  const chartRef1 = useRef(null);
+  const chartRef2 = useRef(null);
+  const chartInstance1 = useRef(null);
+  const chartInstance2 = useRef(null);
+
+  const openCasesCount = useMemo(() => cases.filter(x => String(x.status || 'OPEN').toUpperCase() !== 'CLOSED').length, [cases]);
+  const totalEntities = useMemo(() => cases.reduce((s, x) => s + (x.total_entities || 0), 0), [cases]);
+  const critInsights = useMemo(() => (insights || []).filter(i => (i.severity || '').toUpperCase() === 'CRITICAL').length, [insights]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      if (!insights.length && cases.length) {
+        try {
+          const topCases = cases.slice(0, 4);
+          const res = await Promise.all(topCases.map(c => API.get(`/api/cases/${encodeURIComponent(c.case_id)}/insights`).catch(() => [])));
+          if (isMounted) setInsights(res.flat());
+        } catch (e) {}
+      }
+      try {
+        const g = await API.get('/api/graph?limit=500');
+        if (!isMounted) return;
+        const counts = {};
+        (g.nodes || []).forEach(n => {
+          const l = n.labels[0] || 'Entity';
+          counts[l] = (counts[l] || 0) + 1;
+        });
+        if (chartRef1.current) {
+          if (chartInstance1.current) chartInstance1.current.destroy();
+          chartInstance1.current = new Chart(chartRef1.current, {
+            type: 'bar',
+            data: {
+              labels: Object.keys(counts),
+              datasets: [{
+                data: Object.values(counts),
+                backgroundColor: ['#00d2ff', '#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'],
+                borderRadius: 6, barPercentage: 0.6
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
+        }
+      } catch (e) {}
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, [cases, insights.length, setInsights]);
+
+  useEffect(() => {
+    const sev = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+    (insights || []).forEach(i => {
+      if (sev[i.severity] !== undefined) sev[i.severity]++;
+    });
+    if (chartRef2.current) {
+      if (chartInstance2.current) chartInstance2.current.destroy();
+      chartInstance2.current = new Chart(chartRef2.current, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(sev),
+          datasets: [{
+            data: Object.values(sev),
+            backgroundColor: ['#f43f5e', '#f59e0b', '#06b6d4', '#10b981']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+      });
+    }
+  }, [insights]);
+
+  const isHealthy = health?.status === 'healthy';
+
+  return (
+    <div>
+      <div className="cards-grid">
+        <div className="stat-card" style={{'--glow': 'rgba(0, 210, 255, 0.28)'}}>
+          <div className="stat-label">Cases in Database</div>
+          <div className="stat-value">{cases.length}</div>
+          <div className="stat-foot"><small>{openCasesCount} active / open</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': 'rgba(99, 102, 241, 0.25)'}}>
+          <div className="stat-label">Total Entities</div>
+          <div className="stat-value">{totalEntities.toLocaleString()}</div>
+          <div className="stat-foot"><small>indexed in graph</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': 'rgba(245, 158, 11, 0.25)'}}>
+          <div className="stat-label">Forensic Insights</div>
+          <div className="stat-value">{insights.length}</div>
+          <div className="stat-foot"><small>{critInsights} critical threats</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': isHealthy ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}}>
+          <div className="stat-label">Database State</div>
+          <div className="stat-value" style={{fontSize: '22px'}}>{isHealthy ? 'Connected' : 'Offline'}</div>
+          <div className="stat-foot">
+            {isHealthy ? <small>Neo4j {health?.version || 'Cluster'} · {Math.round(health?.latency_ms || 0)}ms</small> : <small>Reconnecting to database…</small>}
+          </div>
+        </div>
+      </div>
+
+      <div className="cards-grid" style={{gridTemplateColumns: '2fr 1fr'}}>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Entity Distribution by Type</div></div>
+          <div style={{position:'relative', height:'270px'}}><canvas ref={chartRef1}></canvas></div>
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Threat Severity Mix</div></div>
+          <div style={{position:'relative', height:'270px'}}><canvas ref={chartRef2}></canvas></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div>
+            <div className="card-title">Active Investigations</div>
+            <div style={{fontSize:'12px', color:'var(--text-faint)', marginTop:'2px'}}>Direct live stream from connected Neo4j knowledge graph</div>
+          </div>
+          <button className="neu-btn ghost" onClick={() => changeView('cases')}>View all cases →</button>
+        </div>
+        {!cases.length ? (
+          <div className="empty">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            No cases registered yet. <a href="#" onClick={(e) => { e.preventDefault(); changeView('ingest'); }}>Ingest case data to get started →</a>
+          </div>
+        ) : (
+          <div className="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Case Name / ID</th><th>Type</th><th>Entities</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                {cases.slice(0, 6).map(x => (
+                  <tr key={x.case_id} style={{cursor:'pointer'}} onClick={() => changeView('cases')}>
+                    <td>
+                      <div style={{fontWeight:700, color:'var(--text)'}}>{esc(x.case_name || x.case_id)}</div>
+                      <div className="mono" style={{color:'var(--text-faint)'}}>{esc(x.case_id)}</div>
+                    </td>
+                    <td>{esc(x.case_type || '—')}</td>
+                    <td className="mono">{x.total_entities}</td>
+                    <td><span className={`tag ${(x.status || 'open').toLowerCase().includes('close') ? 'closed' : 'open'}`}>{esc(x.status || 'OPEN')}</span></td>
+                    <td style={{textAlign:'right'}}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6"/></svg>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Graph Explorer ----------
+function GraphExplorerModule({ cases, selectedCase, setSelectedCase, openEntityModal, addToast, theme }) {
+  const containerRef = useRef(null);
+  const networkRef = useRef(null);
+  const [caseFilter, setCaseFilter] = useState(selectedCase || '');
+  const [layoutType, setLayoutType] = useState('structured');
+  const [edgeLabelMode, setEdgeLabelMode] = useState('clean');
+  const [limit, setLimit] = useState(1200);
+  const [hideIsolated, setHideIsolated] = useState(false);
+  const [physicsEnabled, setPhysicsEnabled] = useState(true);
+  const [aiPanelCollapsed, setAiPanelCollapsed] = useState(false);
+  const [graphNodes, setGraphNodes] = useState([]);
+  const [graphEdges, setGraphEdges] = useState([]);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // AI Copilot state
+  const [aiChatLog, setAiChatLog] = useState([
+    {
+      sender: 'bot',
+      model: 'Atlas Graph Assistant',
+      content: "Can't get inferences from this visual topology? Ask me directly to identify key operatives, money flows, or hidden links.",
+      chips: [
+        '🎯 Who are the main targets?',
+        '💸 Money laundering flow',
+        '🔍 Summarize graph inference',
+        '📱 Burner phone analysis'
+      ]
+    }
+  ]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiQuerying, setAiQuerying] = useState(false);
+
+  const fetchGraph = useCallback(async () => {
+    setLoading(true);
+    try {
+      const g = await API.get(`/api/graph?limit=${limit}${caseFilter ? `&case_id=${encodeURIComponent(caseFilter)}` : ''}`);
+      setGraphNodes(g.nodes || []);
+      setGraphEdges(g.edges || []);
+    } catch (e) {
+      addToast(`Failed to load graph: ${e.message}`, 'err');
+    } finally {
+      setLoading(false);
+    }
+  }, [limit, caseFilter, addToast]);
+
+  useEffect(() => {
+    fetchGraph();
+  }, [fetchGraph]);
+
+  // Render Network Graph
+  useEffect(() => {
+    if (!containerRef.current || typeof vis === 'undefined' || !vis.Network) return;
+    if (networkRef.current) {
+      networkRef.current.destroy();
+      networkRef.current = null;
+    }
+
+    const isLight = theme === 'light';
+    const textColor = isLight ? '#0f172a' : '#cbd5e1';
+    const edgeColor = isLight ? 'rgba(51, 65, 85, 0.45)' : 'rgba(148, 163, 184, 0.4)';
+
+    // Compute degrees
+    const degrees = {};
+    (graphEdges || []).forEach(e => {
+      degrees[e.source] = (degrees[e.source] || 0) + 1;
+      degrees[e.target] = (degrees[e.target] || 0) + 1;
+    });
+
+    const seenNodeIds = new Set();
+    const nodes = [];
+    (graphNodes || []).forEach(n => {
+      if (!n || !n.id || seenNodeIds.has(n.id)) return;
+      if (hideIsolated && (degrees[n.id] || 0) <= 1 && !n.labels?.includes('Case')) return;
+
+      seenNodeIds.add(n.id);
+      const isCase = n.labels?.includes('Case');
+      const isPerson = n.labels?.includes('Person');
+
+      nodes.push({
+        id: n.id,
+        label: n.name || n.id,
+        level: getNodeLevel(n.labels),
+        title: `${n.labels?.[0] || 'Node'}: ${n.name || n.id}\nID: ${n.id}`,
+        shape: 'dot',
+        size: isCase ? 22 : (isPerson ? 16 : 12),
+        color: {
+          background: LABEL_COLOR[n.labels?.[0]] || '#94a3b8',
+          border: isLight ? '#ffffff' : '#070a12',
+          highlight: { background: '#00d2ff', border: '#ffffff' }
+        },
+        font: {
+          color: textColor,
+          size: isCase ? 14 : (isPerson ? 12 : 10),
+          face: 'Inter',
+          strokeWidth: isLight ? 2 : 0,
+          strokeColor: isLight ? '#ffffff' : 'transparent'
+        }
+      });
+    });
+
+    const seenEdgeIds = new Set();
+    const edges = [];
+    (graphEdges || []).forEach((e, idx) => {
+      if (!e || !e.source || !e.target) return;
+      if (!seenNodeIds.has(e.source) || !seenNodeIds.has(e.target)) return;
+
+      let edgeId = String(e.id || `edge_${e.source}_${e.type}_${e.target}_${idx}`);
+      if (seenEdgeIds.has(edgeId)) edgeId = `${edgeId}_${idx}`;
+      seenEdgeIds.add(edgeId);
+
+      const isCaseLink = e.type === 'INVOLVES';
+      let label = e.type || '';
+      if (edgeLabelMode === 'none') label = '';
+      else if (edgeLabelMode === 'clean' && isCaseLink) label = '';
+
+      edges.push({
+        id: edgeId,
+        from: e.source,
+        to: e.target,
+        label: label,
+        title: `${e.type || 'LINK'} (${e.source} → ${e.target})`,
+        arrows: 'to',
+        color: {
+          color: isCaseLink ? (isLight ? 'rgba(2, 132, 199, 0.35)' : 'rgba(0, 210, 255, 0.35)') : edgeColor,
+          highlight: '#00d2ff', hover: '#00d2ff'
+        },
+        dashes: isCaseLink,
+        font: {
+          color: isLight ? '#475569' : '#94a3b8',
+          size: 9, face: 'Inter', strokeWidth: 0,
+          background: isLight ? 'rgba(255,255,255,0.85)' : 'rgba(12, 17, 30, 0.85)'
+        },
+        smooth: { enabled: true, type: 'continuous', roundness: 0.35 }
+      });
+    });
+
+    const seed = getDeterministicSeed(caseFilter || 'all');
+    let layoutOpts = { randomSeed: seed };
+    let physicsOpts = {};
+
+    if (layoutType === 'hierarchy_ud') {
+      layoutOpts.hierarchical = { enabled: true, direction: 'UD', sortMethod: 'directed', levelSeparation: 140, nodeSpacing: 160 };
+      physicsOpts = { enabled: physicsEnabled, solver: 'hierarchicalRepulsion', hierarchicalRepulsion: { nodeDistance: 150, centralGravity: 0.0, springLength: 120, springConstant: 0.04, damping: 0.48 } };
+    } else if (layoutType === 'hierarchy_lr') {
+      layoutOpts.hierarchical = { enabled: true, direction: 'LR', sortMethod: 'directed', levelSeparation: 170, nodeSpacing: 140 };
+      physicsOpts = { enabled: physicsEnabled, solver: 'hierarchicalRepulsion', hierarchicalRepulsion: { nodeDistance: 140, centralGravity: 0.0, springLength: 120, springConstant: 0.04, damping: 0.48 } };
+    } else if (layoutType === 'radial') {
+      layoutOpts.improvedLayout = true;
+      physicsOpts = { enabled: physicsEnabled, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -70, centralGravity: 0.04, springLength: 150, springConstant: 0.08, damping: 0.55, avoidOverlap: 0.85 } };
+    } else {
+      layoutOpts.improvedLayout = true;
+      physicsOpts = { enabled: physicsEnabled, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -55, centralGravity: 0.015, springLength: 160, springConstant: 0.07, damping: 0.52, avoidOverlap: 0.90 } };
+    }
+
+    const net = new vis.Network(containerRef.current, { nodes, edges }, {
+      layout: layoutOpts, physics: physicsOpts, nodes: { borderWidth: 2 }, edges: { width: 1.4 },
+      interaction: { hover: true, tooltipDelay: 100, navigationButtons: true, keyboard: true }
+    });
+
+    net.on('click', p => {
+      if (p.nodes && p.nodes.length) {
+        const targetId = p.nodes[0];
+        const nObj = graphNodes.find(n => n.id === targetId);
+        if (nObj) setSelectedNode(nObj);
+      }
+    });
+
+    networkRef.current = net;
+  }, [graphNodes, graphEdges, layoutType, edgeLabelMode, hideIsolated, physicsEnabled, theme, caseFilter]);
+
+  const handleAiQuerySubmit = async (e, promptOverride = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const q = promptOverride || aiInput.trim();
+    if (!q) return;
+
+    if (!promptOverride) setAiInput('');
+    setAiChatLog(prev => [...prev, { sender: 'user', content: q }]);
+    setAiQuerying(true);
+
+    try {
+      const res = await API.post('/api/graph/ai-query', {
+        question: q,
+        case_id: caseFilter || null,
+        nodes_count: graphNodes?.length || null,
+        edges_count: graphEdges?.length || null,
+        selected_node_id: selectedNode?.id || null
+      });
+      setAiChatLog(prev => [...prev, {
+        sender: 'bot',
+        model: res.ai_model || 'AI Copilot',
+        content: res.answer || 'No specific inference generated.'
+      }]);
+    } catch (err) {
+      setAiChatLog(prev => [...prev, {
+        sender: 'bot',
+        error: true,
+        content: `Inference query error: ${err.message}`
+      }]);
+    } finally {
+      setAiQuerying(false);
+    }
+  };
+
+  const nodeCounts = useMemo(() => {
+    const counts = {};
+    (graphNodes || []).forEach(n => {
+      const l = n.labels?.[0] || 'Entity';
+      counts[l] = (counts[l] || 0) + 1;
+    });
+    return counts;
+  }, [graphNodes]);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M12 3a2 2 0 0 1 2 2c0 .4-.1.8-.3 1.1l3.4 5.4c.3-.1.6-.2.9-.2a2 2 0 1 1 0 4c-.3 0-.6-.1-.9-.2l-3.4 5.4c.2.3.3.7.3 1.1a2 2 0 1 1-3.6-1.1L8.9 15.5c-.3.1-.6.2-.9.2a2 2 0 1 1 0-4c.3 0 .6.1.8.2l3.4-5.4c-.2-.3-.3-.7-.3-1.1a2 2 0 0 1 2-2Z"/></svg>
+            Network Topology Explorer
+          </div>
+          <div className="row" style={{gap:'10px', alignItems:'flex-end', flexWrap:'wrap'}}>
+            <div className="field" style={{minWidth:'180px'}}>
+              <label>Case Filter</label>
+              <select className="control" value={caseFilter} onChange={e => { setCaseFilter(e.target.value); setSelectedCase(e.target.value); }}>
+                <option value="">All Ingested Cases</option>
+                {cases.map(c => <option key={c.case_id} value={c.case_id}>{esc(c.case_name || c.case_id)}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{minWidth:'180px'}}>
+              <label>Layout Structure</label>
+              <select className="control" value={layoutType} onChange={e => setLayoutType(e.target.value)}>
+                <option value="structured">🌟 Structured Organic (Reduced Bounce)</option>
+                <option value="hierarchy_ud">🌳 Hierarchical Flow (Top-to-Bottom)</option>
+                <option value="hierarchy_lr">🏛️ Pipeline Flow (Left-to-Right)</option>
+                <option value="radial">🎯 Central Core & Radial Orbit</option>
+              </select>
+            </div>
+            <div className="field" style={{maxWidth:'130px'}}>
+              <label>Edge Labels</label>
+              <select className="control" value={edgeLabelMode} onChange={e => setEdgeLabelMode(e.target.value)}>
+                <option value="clean">Clean (Hide INVOLVES)</option>
+                <option value="all">Show All</option>
+                <option value="none">No Edge Text</option>
+              </select>
+            </div>
+            <div className="field" style={{maxWidth:'110px'}}>
+              <label>Limit</label>
+              <select className="control" value={limit} onChange={e => setLimit(Number(e.target.value))}>
+                <option value="300">300</option>
+                <option value="600">600</option>
+                <option value="1200">1200</option>
+                <option value="2500">2500</option>
+              </select>
+            </div>
+            <div style={{display:'flex', gap:'8px', alignItems:'flex-end'}}>
+              <button className="neu-btn primary" disabled={loading} onClick={fetchGraph}>{loading ? 'Rendering…' : 'Render'}</button>
+              <button className="neu-btn ghost" onClick={() => setAiPanelCollapsed(prev => !prev)} style={{display:'inline-flex', alignItems:'center', gap:'6px', color:'var(--accent)'}}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                <span>{aiPanelCollapsed ? 'Show Copilot' : 'AI Copilot'}</span>
+              </button>
+              <button className="neu-btn ghost" onClick={() => { setPhysicsEnabled(p => !p); addToast(physicsEnabled ? 'Physics locked into place' : 'Physics simulation resumed', 'info'); }}>
+                <span>{physicsEnabled ? '⏸ Pause' : '▶ Live Bounce'}</span>
+              </button>
+              <button className="neu-btn ghost" onClick={() => { if (networkRef.current) networkRef.current.fit({animation:{duration:600}}); }}>Fit</button>
+            </div>
+          </div>
+        </div>
+
+        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:'14px', marginBottom:'12px', flexWrap:'wrap'}}>
+          <label style={{display:'inline-flex', alignItems:'center', gap:'7px', fontSize:'12.5px', color:'var(--text-dim)', cursor:'pointer'}}>
+            <input type="checkbox" checked={hideIsolated} onChange={e => setHideIsolated(e.target.checked)} style={{cursor:'pointer'}} />
+            Hide Isolated 1-Hop Pairs (Focus Connected Core)
+          </label>
+          <div style={{fontSize:'12px', color:'var(--text-faint)'}}>
+            Drag nodes to inspect · Click any node or ask the AI Copilot on the right for inferences
+          </div>
+        </div>
+
+        <div id="graph">
+          {loading && (
+            <div style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'14px', color:'var(--text-dim)', background:'var(--graph-bg)', zIndex:10}}>
+              <div className="status-dot" style={{width:'14px', height:'14px', background:'var(--accent)', animation:'pulse 1s infinite'}}></div>
+              <div style={{fontSize:'13px'}}>Generating graph layout…</div>
+            </div>
+          )}
+          <div id="graphCanvas" ref={containerRef}></div>
+
+          {/* AI Copilot Side Structure */}
+          <div className={`graph-ai-box ${aiPanelCollapsed ? 'collapsed' : ''}`}>
+            <div className="graph-ai-header">
+              <div style={{display:'flex', alignItems:'center', gap:'7px'}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                <span style={{fontWeight:700, fontSize:'13px', color:'var(--text)'}}>AI Copilot</span>
+                <span className="tag open" style={{padding:'1px 6px', fontSize:'9.5px', textTransform:'uppercase'}}>AI Inference</span>
+              </div>
+              <button className="neu-btn ghost" style={{padding:'2px 7px', fontSize:'11px'}} onClick={() => setAiPanelCollapsed(true)}>✕</button>
+            </div>
+
+            <div className="graph-ai-body">
+              {aiChatLog.map((msg, idx) => (
+                <div key={idx} className={`ai-msg ${msg.sender === 'user' ? 'user' : 'bot'}`} style={msg.error ? {borderColor:'rgba(239, 68, 68, 0.4)'} : {}}>
+                  <div className="ai-msg-hdr">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                    <span>{msg.sender === 'user' ? 'Investigator Query' : (msg.model || 'AI Copilot')}</span>
+                  </div>
+                  <div>{msg.content}</div>
+                  {msg.chips && (
+                    <div className="ai-quick-chips">
+                      {msg.chips.map((c, cIdx) => (
+                        <button key={cIdx} type="button" className="ai-chip" onClick={() => handleAiQuerySubmit(null, c.replace(/^[^a-zA-Z0-9]+/, ''))}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {aiQuerying && (
+                <div className="ai-msg bot">
+                  <div className="ai-msg-hdr">
+                    <div className="status-dot" style={{width:'8px', height:'8px', background:'var(--accent)', animation:'pulse 1s infinite'}}></div>
+                    <span>AI is analyzing topology…</span>
+                  </div>
+                  <div style={{fontSize:'11.5px', color:'var(--text-faint)'}}>Correlating nodes, transactions, and hidden links</div>
+                </div>
+              )}
+            </div>
+
+            <div className="graph-ai-footer">
+              <form onSubmit={handleAiQuerySubmit} style={{display:'flex', gap:'6px', width:'100%', margin:0}}>
+                <input type="text" className="control" style={{fontSize:'12px', padding:'7px 10px', flex:1}} placeholder="Ask about this network…" value={aiInput} onChange={e => setAiInput(e.target.value)} />
+                <button type="submit" className="neu-btn primary" disabled={aiQuerying} style={{padding:'0 12px', fontSize:'12px'}}>{aiQuerying ? '…' : 'Ask'}</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="legend">
+          {Object.entries(nodeCounts).map(([k, v]) => (
+            <div key={k} className="lg">
+              <span className="dot" style={{background: LABEL_COLOR[k] || '#94a3b8'}}></span>
+              <b>{k}</b> <span className="mono">({v})</span>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:'14px', fontSize:'13px', color:'var(--text-dim)', fontFamily:'var(--mono)'}}>
+          Subnetwork: <b>{graphNodes.length}</b> nodes · <b>{graphEdges.length}</b> edges · Seed: <span className="mono">{getDeterministicSeed(caseFilter || 'all')}</span>
+        </div>
+      </div>
+
+      {selectedNode && (
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">Entity Inspection</div>
+            <button className="neu-btn ghost" onClick={() => setSelectedNode(null)}>Close</button>
+          </div>
+          <div>
+            <div style={{display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px'}}>
+              <span className="dot" style={{width:'14px', height:'14px', background: LABEL_COLOR[selectedNode.labels?.[0]] || '#94a3b8', borderRadius:'50%'}}></span>
+              <div>
+                <div style={{fontWeight:700, fontSize:'16px'}}>{esc(selectedNode.name)}</div>
+                <div className="mono" style={{color:'var(--text-faint)', fontSize:'12px'}}>{esc(selectedNode.id)}</div>
+              </div>
+              <span style={{marginLeft:'auto'}} className="tag plain">{selectedNode.labels?.join(', ')}</span>
+            </div>
+            <div className="kv">
+              {Object.entries(selectedNode.properties || {})
+                .filter(([k]) => !['case_ids', 'created_at', 'updated_at'].includes(k))
+                .slice(0, 12)
+                .map(([k, v]) => (
+                  <div key={k}>
+                    <div className="k">{esc(k)}</div>
+                    <div className="v mono">{esc(typeof v === 'object' ? JSON.stringify(v) : v)}</div>
+                  </div>
+                ))}
+            </div>
+            <div style={{marginTop:'18px', display:'flex', gap:'10px'}}>
+              <button className="neu-btn primary" onClick={() => openEntityModal(selectedNode.id)}>View Full 360° Profile</button>
+              <button className="neu-btn ghost" onClick={() => handleAiQuerySubmit(null, `Analyze the connections and risk profile of entity ${selectedNode.name || selectedNode.id}`)}>✨ Ask Copilot</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Entity Search ----------
+function EntitySearchModule({ openEntityModal, addToast }) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('');
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const doSearch = async () => {
+    if (!query.trim()) { addToast('Please specify a search query', 'info'); return; }
+    setLoading(true);
+    try {
+      const res = await API.get(`/api/entities/search?q=${encodeURIComponent(query.trim())}${category ? `&entity_type=${category}` : ''}&limit=50`);
+      setResults(res);
+    } catch (e) {
+      setResults([]);
+      addToast(e.message, 'err');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Entity Knowledge Search</div></div>
+        <div className="row" style={{alignItems:'flex-end'}}>
+          <div className="field" style={{flex:2}}>
+            <label>Search Query</label>
+            <input className="control" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') doSearch(); }} placeholder="Enter name, phone (+91...), account number, VIN, license plate, or handle…" />
+          </div>
+          <div className="field" style={{maxWidth:'200px'}}>
+            <label>Entity Category</label>
+            <select className="control" value={category} onChange={e => setCategory(e.target.value)}>
+              <option value="">All Categories</option>
+              {['Person','Phone','BankAccount','Vehicle','SocialHandle','IPAddress','Location','CellTower','Case','FIR'].map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <button className="neu-btn primary" disabled={loading} onClick={doSearch}>
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35"/></svg>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Search Results</div>
+          <span className="tag plain">{results ? `${results.length} matches` : '0 matches'}</span>
+        </div>
+        {loading ? (
+          <div><div className="skeleton sk-row"></div><div className="skeleton sk-row"></div></div>
+        ) : !results ? (
+          <div className="empty">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35"/></svg>
+            Execute a search query above to inspect entity profiles.
+          </div>
+        ) : !results.length ? (
+          <div className="empty">No entity matches found for "{query}". Try searching by partial name or number.</div>
+        ) : (
+          <div>
+            {results.map(r => (
+              <div key={r.entity_id} className="result-item" onClick={() => openEntityModal(r.entity_id)}>
+                <div className="result-main">
+                  <div className="result-name">{esc(r.display_name || r.entity_id)}</div>
+                  <div className="result-sub mono">{esc(r.entity_id)}</div>
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                  <span className="tag plain">{r.labels.slice(0, 3).join(', ')}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6"/></svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Shortest Path ----------
+function ShortestPathModule({ openEntityModal, addToast }) {
+  const [suspect, setSuspect] = useState('');
+  const [victim, setVictim] = useState('');
+  const [depth, setDepth] = useState(5);
+  const [pathResult, setPathResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const doTrace = async (sOverride = null, vOverride = null) => {
+    const s = sOverride || suspect.trim();
+    const v = vOverride || victim.trim();
+    if (!s || !v) { addToast('Specify both suspect and victim', 'info'); return; }
+    setLoading(true);
+
+    const sParam = s.toUpperCase().startsWith('P-') || s.toUpperCase().startsWith('PERSON_') ? `suspect_id=${encodeURIComponent(s)}` : `suspect_name=${encodeURIComponent(s)}`;
+    const vParam = v.toUpperCase().startsWith('P-') || v.toUpperCase().startsWith('PERSON_') ? `victim_id=${encodeURIComponent(v)}` : `victim_name=${encodeURIComponent(v)}`;
+
+    try {
+      const res = await API.get(`/api/cases/shortest-path?${sParam}&${vParam}&max_depth=${depth}`);
+      setPathResult(res);
+    } catch (e) {
+      addToast(e.message, 'err');
+      setPathResult({ error: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Trace Association Path</div></div>
+        <div className="row" style={{alignItems:'flex-end'}}>
+          <div className="field">
+            <label>Suspect (Name or ID)</label>
+            <input className="control" value={suspect} onChange={e => setSuspect(e.target.value)} placeholder="e.g. Devendra Sharma or P-001" />
+          </div>
+          <div className="field">
+            <label>Victim (Name or ID)</label>
+            <input className="control" value={victim} onChange={e => setVictim(e.target.value)} placeholder="e.g. Rajesh Kumar or P-002" />
+          </div>
+          <div className="field" style={{maxWidth:'130px'}}>
+            <label>Max Hops</label>
+            <select className="control" value={depth} onChange={e => setDepth(Number(e.target.value))}>
+              {[2,3,5,7,10,15].map(d => <option key={d} value={d}>{d} hops</option>)}
+            </select>
+          </div>
+          <button className="neu-btn primary" disabled={loading} onClick={() => doTrace()}>
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14m0 0-4-4m4 4-4 4"/></svg>
+            Trace Path
+          </button>
+        </div>
+        <div style={{marginTop:'10px', fontSize:'12px', color:'var(--text-faint)'}}>
+          Ambiguity safe: if a name resolves to multiple persons, the system presents candidate keys for disambiguation.
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header"><div className="card-title">Path Traversal Result</div></div>
+        {loading ? (
+          <div><div className="skeleton sk-row"></div><div className="skeleton sk-row"></div></div>
+        ) : !pathResult ? (
+          <div className="empty">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M4 5h12m0 0-3-3m3 3-3 3M4 19h12m0 0-3-3m3 3-3 3M8 8v8"/></svg>
+            Enter suspect and victim identifiers to compute graph connectivity.
+          </div>
+        ) : pathResult.error ? (
+          <div className="empty" style={{color:'var(--red)'}}>{pathResult.error}</div>
+        ) : pathResult.ambiguous ? (
+          <div style={{maxWidth:'640px', margin:'0 auto', textAlign:'left'}}>
+            <div style={{color:'var(--amber)', fontWeight:700, fontSize:'15px', marginBottom:'8px'}}>
+              ⚠ Ambiguity Detected — Multiple Entities Matched
+            </div>
+            <p style={{fontSize:'13.5px', color:'var(--text-dim)', marginBottom:'14px'}}>{pathResult.message}</p>
+            <div style={{fontSize:'12px', color:'var(--text-faint)', marginBottom:'10px', textTransform:'uppercase', fontWeight:700}}>Matching Candidates:</div>
+            {(pathResult.candidates || []).map(c => (
+              <div key={c.person_id} className="result-item" style={{cursor:'default'}}>
+                <div className="result-main">
+                  <div className="result-name">{esc(c.name)} <span className="mono" style={{color:'var(--text-faint)', fontSize:'12px'}}>({esc(c.person_id)})</span></div>
+                  <div className="result-sub">DOB: {esc(c.dob || '—')} · Cases: {(c.case_ids || []).join(', ')}</div>
+                </div>
+                <div style={{display:'flex', gap:'8px'}}>
+                  <button className="neu-btn ghost" style={{padding:'4px 8px', fontSize:'11.5px'}} onClick={() => { setSuspect(c.person_id); doTrace(c.person_id, null); }}>Use as Suspect</button>
+                  <button className="neu-btn ghost" style={{padding:'4px 8px', fontSize:'11.5px'}} onClick={() => { setVictim(c.person_id); doTrace(null, c.person_id); }}>Use as Victim</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : !pathResult.nodes || !pathResult.nodes.length ? (
+          <div className="empty">{pathResult.summary || 'No association path found between entities within depth limit.'}</div>
+        ) : (
+          <div style={{maxWidth:'600px', margin:'0 auto'}}>
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'18px'}}>
+              <span className="tag open">{pathResult.path_length} Hop Connection</span>
+              <span style={{fontSize:'12.5px', color:'var(--text-dim)'}}>{pathResult.summary}</span>
+            </div>
+            {pathResult.nodes.map((n, i) => (
+              <React.Fragment key={n.id}>
+                <div style={{display:'flex', alignItems:'center', gap:'12px', padding:'12px 18px', border:'1px solid var(--border)', borderRadius:'12px', background:'var(--surface)'}}>
+                  <span className="dot" style={{width:'12px', height:'12px', background: LABEL_COLOR[n.labels?.[0]] || '#94a3b8', borderRadius:'50%'}}></span>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700, color:'var(--text)', fontSize:'14px'}}>{esc(n.name || n.id)}</div>
+                    <div className="mono" style={{color:'var(--text-faint)', fontSize:'11.5px'}}>{esc(n.id)} · {n.labels?.join(', ') || 'Entity'}</div>
+                  </div>
+                  <button className="neu-btn ghost" style={{padding:'4px 8px', fontSize:'11px'}} onClick={() => openEntityModal(n.id)}>Inspect</button>
+                </div>
+                {i < pathResult.nodes.length - 1 && (
+                  <div style={{display:'flex', alignItems:'center', justifyContent:'center', margin:'4px 0', color:'var(--accent)'}}>
+                    <span style={{fontSize:'18px'}}>↓</span>
+                    {pathResult.relationships?.[i] && <span className="tag plain mono" style={{marginLeft:'8px'}}>{pathResult.relationships[i].type}</span>}
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Centrality Rankings ----------
+function RankingsModule({ cases, openEntityModal, addToast }) {
+  const [metric, setMetric] = useState('degree');
+  const [label, setLabel] = useState('Person');
+  const [caseId, setCaseId] = useState('');
+  const [limit, setLimit] = useState(15);
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const doCalculate = async () => {
+    setLoading(true);
+    try {
+      const url = `/api/cases/rankings?metric=${metric}&label=${label}&limit=${limit}${caseId ? `&case_id=${encodeURIComponent(caseId)}` : ''}`;
+      const r = await API.get(url);
+      setResults(r);
+    } catch (e) {
+      addToast(e.message, 'err');
+      setResults({ rankings: [], total_ranked: 0 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const maxScore = useMemo(() => results?.rankings?.[0]?.score || 1, [results]);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Ranking Analysis Configuration</div></div>
+        <div className="row" style={{alignItems:'flex-end'}}>
+          <div className="field" style={{maxWidth:'200px'}}>
+            <label>Centrality Metric</label>
+            <select className="control" value={metric} onChange={e => setMetric(e.target.value)}>
+              <option value="degree">Degree Centrality</option>
+              <option value="weighted_degree">Weighted Degree</option>
+              <option value="cross_case_relevance">Cross-Case Relevance</option>
+              <option value="pagerank">PageRank</option>
+              <option value="betweenness">Betweenness Centrality</option>
+            </select>
+          </div>
+          <div className="field" style={{maxWidth:'180px'}}>
+            <label>Entity Category</label>
+            <select className="control" value={label} onChange={e => setLabel(e.target.value)}>
+              {['Person','Phone','BankAccount','Vehicle','SocialHandle','IPAddress','Location','CellTower'].map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="field" style={{maxWidth:'180px'}}>
+            <label>Case Filter</label>
+            <select className="control" value={caseId} onChange={e => setCaseId(e.target.value)}>
+              <option value="">All Cases (Global)</option>
+              {cases.map(c => <option key={c.case_id} value={c.case_id}>{esc(c.case_name || c.case_id)}</option>)}
+            </select>
+          </div>
+          <div className="field" style={{maxWidth:'110px'}}>
+            <label>Limit</label>
+            <input className="control" type="number" value={limit} onChange={e => setLimit(Number(e.target.value))} min="1" max="100" />
+          </div>
+          <button className="neu-btn primary" disabled={loading} onClick={doCalculate}>Calculate</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Rankings: {metric.replace(/_/g, ' ').toUpperCase()}</div>
+          <span className="tag plain">{results ? `${results.total_ranked} Ranked` : '0 Ranked'}</span>
+        </div>
+        {loading ? (
+          <div><div className="skeleton sk-row"></div><div className="skeleton sk-row"></div></div>
+        ) : !results ? (
+          <div className="empty">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M3 17l4-4 4 4 5-5 4 4"/></svg>
+            Select parameters above to evaluate influential network nodes.
+          </div>
+        ) : !results.rankings || !results.rankings.length ? (
+          <div className="empty">Data not found</div>
+        ) : (
+          <div>
+            {results.rankings.map((it, i) => (
+              <div key={it.id} className="list-row">
+                <div style={{display:'flex', alignItems:'center', gap:'14px', flex:1}}>
+                  <div style={{
+                    width:'30px', height:'30px', borderRadius:'10px', display:'grid', placeItems:'center', fontWeight:800, fontSize:'13px',
+                    background: i===0 ? 'var(--accent-gradient)' : i===1 ? 'rgba(99,102,241,0.25)' : i===2 ? 'rgba(245,158,11,0.25)' : 'var(--surface-hover)',
+                    color: i===0 ? '#fff' : 'var(--text)'
+                  }}>
+                    {i + 1}
+                  </div>
+                  <div>
+                    <div className="l-name">{esc(it.name || it.id)}</div>
+                    <div className="l-sub mono">{esc(it.id)} · {(it.case_ids || []).join(', ')}</div>
+                  </div>
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:'16px', minWidth:'200px'}}>
+                  <div style={{flex:1, height:'8px', borderRadius:'6px', background:'var(--bg1)', overflow:'hidden', border:'1px solid var(--border)'}}>
+                    <div style={{height:'100%', width:`${Math.max(5, (it.score / maxScore) * 100)}%`, background:'var(--accent-gradient)', borderRadius:'6px'}}></div>
+                  </div>
+                  <span className="mono" style={{fontWeight:700, color:'var(--text)', minWidth:'48px', textAlign:'right'}}>{Number(it.score).toFixed(it.score < 10 ? 2 : 0)}</span>
+                  <button className="neu-btn ghost" style={{padding:'3px 8px', fontSize:'11px'}} onClick={() => openEntityModal(it.id)}>Profile</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Pattern Insights ----------
+function PatternInsightsModule({ cases, insights, setInsights, openAiDossier, addToast }) {
+  const [selectedCase, setSelectedCase] = useState('');
+  const [severityFilter, setSeverityFilter] = useState('');
+  const [selectedInsight, setSelectedInsight] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchInsights = useCallback(async () => {
+    setLoading(true);
+    try {
+      let list = [];
+      if (selectedCase === '__DELTA__') {
+        list = await API.get('/api/insights/delta');
+      } else if (selectedCase) {
+        list = await API.get(`/api/cases/${encodeURIComponent(selectedCase)}/insights`);
+      } else {
+        const allResults = await Promise.all(cases.map(c => API.get(`/api/cases/${encodeURIComponent(c.case_id)}/insights`).catch(() => [])));
+        list = allResults.flat();
+        const seen = new Set();
+        list = list.filter(i => {
+          if (!i.insight_id || seen.has(i.insight_id)) return false;
+          seen.add(i.insight_id);
+          return true;
+        });
+      }
+      setInsights(list);
+    } catch (e) {
+      addToast(e.message, 'err');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCase, cases, setInsights, addToast]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
+
+  const filteredInsights = useMemo(() => {
+    if (!severityFilter) return insights;
+    return (insights || []).filter(i => (i.severity || '').toUpperCase() === severityFilter);
+  }, [insights, severityFilter]);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Automated Forensic Detectors</div>
+          <div className="row" style={{gap:'10px', flexWrap:'wrap'}}>
+            <div className="field" style={{minWidth:'200px'}}>
+              <select className="control" value={selectedCase} onChange={e => setSelectedCase(e.target.value)}>
+                <option value="">All Ingested Cases</option>
+                <option value="__DELTA__">Cross-Case Delta Insights Only</option>
+                {cases.map(c => <option key={c.case_id} value={c.case_id}>Case: {esc(c.case_name || c.case_id)}</option>)}
+              </select>
+            </div>
+            <select className="control" value={severityFilter} onChange={e => setSeverityFilter(e.target.value)} style={{maxWidth:'160px'}}>
+              <option value="">All Severities</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+            <button className="neu-btn primary" onClick={() => {
+              if (selectedCase && selectedCase !== '__DELTA__') {
+                const cObj = cases.find(c => c.case_id === selectedCase);
+                openAiDossier(selectedCase, cObj?.case_name || selectedCase);
+              } else if (cases.length) {
+                openAiDossier(cases[0].case_id, cases[0].case_name || cases[0].case_id);
+              } else {
+                addToast('Please select a case to generate AI Dossier', 'info');
+              }
+            }} style={{display:'inline-flex', alignItems:'center', gap:'6px'}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              ✨ AI Dossier
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div><div className="skeleton sk-row"></div><div className="skeleton sk-row"></div></div>
+      ) : !filteredInsights || !filteredInsights.length ? (
+        <div className="empty">
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M12 3l1.9 5.6L19 10l-5.1 1.9L12 17.5l-1.9-5.6L5 10l5.1-1.4L12 3Z"/></svg>
+          No pattern insights match the selected filter. Ingest additional cases or communications to trigger detection.
+        </div>
+      ) : (
+        <div className="cards-grid" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))'}}>
+          {filteredInsights.map(i => {
+            const sev = (i.severity || 'MEDIUM').toUpperCase();
+            const sevClass = sev === 'CRITICAL' ? 'crit' : sev === 'HIGH' ? 'high' : sev === 'MEDIUM' ? 'med' : 'low';
+            return (
+              <div key={i.insight_id} className="card" style={{marginBottom:0, display:'flex', flexDirection:'column'}}>
+                <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', marginBottom:'12px'}}>
+                  <span className={`tag ${sevClass}`}>{sev}</span>
+                  <span className="mono" style={{fontSize:'11px', color:'var(--text-faint)'}}>{esc(i.insight_type)}</span>
+                </div>
+                <div style={{fontWeight:700, fontSize:'15px', marginBottom:'8px', color:'var(--text)'}}>{esc(i.title)}</div>
+                <div style={{fontSize:'13px', color:'var(--text-dim)', marginBottom:'14px', flex:1, lineHeight:1.5}}>{esc(i.derived_interpretation)}</div>
+                {(i.observed_facts || []).slice(0, 2).map((f, idx) => (
+                  <div key={idx} style={{fontSize:'12px', color:'var(--text-faint)', display:'flex', gap:'6px', marginBottom:'4px'}}>
+                    <span style={{color:'var(--accent)'}}>●</span> {esc(f)}
+                  </div>
+                ))}
+                <div style={{marginTop:'14px', display:'flex', gap:'6px', flexWrap:'wrap'}}>
+                  {(i.case_ids || []).map(c => <span key={c} className="tag plain mono">{esc(c)}</span>)}
+                </div>
+                <button className="neu-btn ghost" style={{marginTop:'14px', width:'100%'}} onClick={() => setSelectedInsight(i)}>Examine Evidence</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedInsight && (
+        <div className="modal-overlay open" onClick={() => setSelectedInsight(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <button className="close neu-btn ghost" onClick={() => setSelectedInsight(null)} style={{float:'right'}}>✕</button>
+            <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px'}}>
+              <span className={`tag ${(selectedInsight.severity||'med').toLowerCase()}`}>{esc(selectedInsight.severity)}</span>
+              <span className="tag plain mono">{esc(selectedInsight.insight_type)} · {esc(selectedInsight.insight_id)}</span>
+            </div>
+            <h3>{esc(selectedInsight.title)}</h3>
+            <div style={{fontSize:'14.5px', color:'var(--text)', marginBottom:'18px', lineHeight:1.6}}>{esc(selectedInsight.derived_interpretation)}</div>
+            <div style={{fontWeight:700, fontSize:'13.5px', marginBottom:'8px'}}>Observed Graph Facts</div>
+            {(selectedInsight.observed_facts || []).map((f, idx) => (
+              <div key={idx} style={{fontSize:'13px', color:'var(--text-dim)', marginBottom:'6px', display:'flex', gap:'8px'}}>
+                <span style={{color:'var(--accent)'}}>➔</span> {esc(f)}
+              </div>
+            ))}
+            {(selectedInsight.alternative_explanations || []).length > 0 && (
+              <React.Fragment>
+                <div style={{fontWeight:700, fontSize:'13.5px', margin:'18px 0 8px'}}>Alternative Explanations</div>
+                {selectedInsight.alternative_explanations.map((a, idx) => <div key={idx} style={{fontSize:'13px', color:'var(--text-faint)', marginBottom:'4px'}}>· {esc(a)}</div>)}
+              </React.Fragment>
+            )}
+            <div style={{marginTop:'20px', padding:'12px', borderRadius:'10px', background:'var(--bg1)', border:'1px solid var(--border)', fontSize:'12px', color:'var(--text-faint)'}}>
+              {esc(selectedInsight.disclaimer || 'Intelligence alert generated automatically from graph topology.')}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Chain of Custody (Blockchain) ----------
+function BlockchainModule({ cases, fetchCases, addToast }) {
+  const [blocks, setBlocks] = useState([]);
+  const [search, setSearch] = useState('');
+  const [expandedCases, setExpandedCases] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [auditing, setAuditing] = useState(false);
+  const [liveAuditMap, setLiveAuditMap] = useState({});
+
+  const fetchLedger = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (!cases.length) await fetchCases();
+      const data = await API.get('/api/v1/blockchain/ledger?limit=500');
+      setBlocks(data.blocks || []);
+    } catch (e) {
+      addToast(e.message, 'err');
+    } finally {
+      setLoading(false);
+    }
+  }, [cases.length, fetchCases, addToast]);
+
+  useEffect(() => {
+    fetchLedger();
+  }, [fetchLedger]);
+
+  const toggleCaseExpand = (cid) => {
+    setExpandedCases(prev => {
+      const next = new Set(prev);
+      if (next.has(cid)) next.delete(cid);
+      else next.add(cid);
+      return next;
+    });
+  };
+
+  const expandAll = (expand) => {
+    if (expand) {
+      const ids = [...new Set(blocks.map(b => b.case_id))];
+      setExpandedCases(new Set(ids));
+    } else {
+      setExpandedCases(new Set());
+    }
+  };
+
+  // Grouping
+  const caseMap = useMemo(() => {
+    const map = {};
+    blocks.forEach(b => {
+      const cid = b.case_id || 'UNKNOWN';
+      if (cid === 'SYSTEM_GENESIS' || b.document_type === 'SYSTEM_GENESIS') return;
+      if (!map[cid]) map[cid] = [];
+      map[cid].push(b);
+    });
+    return map;
+  }, [blocks]);
+
+  const caseIds = useMemo(() => {
+    const regIds = cases.map(c => c.case_id).filter(id => id && id !== 'SYSTEM_GENESIS');
+    const ledIds = Object.keys(caseMap).filter(id => id !== 'SYSTEM_GENESIS');
+    return [...new Set([...regIds, ...ledIds])].sort();
+  }, [cases, caseMap]);
+
+  // Live Audit execution
+  const runLiveAudit = useCallback(async () => {
+    if (!caseIds.length) return;
+    setAuditing(true);
+    try {
+      const results = {};
+      await Promise.all(caseIds.map(async (cid) => {
+        try {
+          const res = await API.get(`/api/v1/blockchain/verify-case/${encodeURIComponent(cid)}`);
+          results[cid] = res;
+        } catch (e) {
+          results[cid] = { status: 'ERROR', message: e.message };
+        }
+      }));
+      setLiveAuditMap(results);
+    } catch (e) {
+      addToast(`Live audit error: ${e.message}`, 'err');
+    } finally {
+      setAuditing(false);
+    }
+  }, [caseIds, addToast]);
+
+  useEffect(() => {
+    if (caseIds.length > 0) {
+      runLiveAudit();
+    }
+  }, [caseIds.length, runLiveAudit]);
+
+  const totalLedgerTampered = useMemo(() => blocks.filter(b => b.is_valid === false).length, [blocks]);
+  const totalLiveTamperedCases = useMemo(() => {
+    return Object.values(liveAuditMap).filter(a => a.status === 'TAMPERED').length;
+  }, [liveAuditMap]);
+
+  const filteredCaseIds = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return caseIds;
+    return caseIds.filter(cid => {
+      const cObj = cases.find(c => c.case_id === cid);
+      const cName = cObj?.case_name || cid;
+      if (cid.toLowerCase().includes(q) || cName.toLowerCase().includes(q)) return true;
+      const caseBlocks = caseMap[cid] || [];
+      return caseBlocks.some(b => 
+        (b.document_name || '').toLowerCase().includes(q) || 
+        (b.document_type || '').toLowerCase().includes(q) ||
+        (b.evidence_hash || '').toLowerCase().includes(q)
+      );
+    });
+  }, [caseIds, cases, caseMap, search]);
+
+  const docIconMap = { FIR: '📜', CDR_LOG: '📞', BANK_STATEMENT: '💳', SURVEILLANCE_LOG: '📹', INTEL_REPORT: '📄', CASE_MASTER: '📂' };
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Blockchain Evidence Chain of Custody
+          </div>
+          <div className="row" style={{gap:'10px'}}>
+            <div className="field" style={{minWidth:'260px'}}>
+              <input className="control" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search case ID or document..." />
+            </div>
+            <button className="neu-btn primary" onClick={() => { fetchLedger(); runLiveAudit(); }} disabled={loading || auditing}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+              {auditing ? 'Auditing Database…' : 'Run Verification Audit'}
+            </button>
+          </div>
+        </div>
+        <div className="cards-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginTop:'10px'}}>
+          <div className="stat-card" style={{'--glow': (totalLedgerTampered > 0 || totalLiveTamperedCases > 0) ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.2)'}}>
+            <div className="stat-label">Chain-of-Custody Status</div>
+            <div className="stat-value" style={{fontSize:'18px', marginTop:'14px', color: (totalLedgerTampered > 0 || totalLiveTamperedCases > 0) ? '#ef4444' : '#10b981'}}>
+              {(totalLedgerTampered > 0 || totalLiveTamperedCases > 0) ? `🔴 ${totalLiveTamperedCases || totalLedgerTampered} TAMPERED DETECTED` : '🟢 100% VERIFIED'}
+            </div>
+          </div>
+          <div className="stat-card" style={{'--glow': 'rgba(99, 102, 241, 0.2)'}}>
+            <div className="stat-label">Encryption & Proof</div>
+            <div className="stat-value" style={{fontSize:'18px', marginTop:'14px'}}>SHA-256 Merkle Proof</div>
+          </div>
+          <div className="stat-card" style={{'--glow': 'rgba(6, 182, 212, 0.2)'}}>
+            <div className="stat-label">Live Database Audit</div>
+            <div className="stat-value" style={{fontSize:'18px', marginTop:'14px', color: totalLiveTamperedCases > 0 ? '#ef4444' : 'var(--accent)'}}>
+              {auditing ? 'Auditing Graph…' : totalLiveTamperedCases > 0 ? `${totalLiveTamperedCases} Case Mismatch` : 'Neo4j Graph Synced'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Investigation Cases & Evidence Verification</div>
+          <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+            <button className="neu-btn ghost" style={{padding:'4px 10px', fontSize:'11.5px'}} onClick={() => expandAll(true)}>Expand All</button>
+            <button className="neu-btn ghost" style={{padding:'4px 10px', fontSize:'11.5px'}} onClick={() => expandAll(false)}>Collapse All</button>
+            <span className="tag plain">{filteredCaseIds.length} Cases</span>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="skeleton sk-row"></div>
+        ) : !filteredCaseIds.length ? (
+          <div className="empty">No blockchain cases recorded matching filter query.</div>
+        ) : (
+          <div style={{display:'flex', flexDirection:'column', gap:'12px', marginTop:'10px'}}>
+            {filteredCaseIds.map(cid => {
+              const caseBlocks = caseMap[cid] || [];
+              const cObj = cases.find(c => c.case_id === cid);
+              const caseName = cObj?.case_name || cid;
+              const liveAudit = liveAuditMap[cid];
+              const isBlockTampered = caseBlocks.some(b => b.is_valid === false);
+              const isLiveTampered = liveAudit && liveAudit.status === 'TAMPERED';
+              const isTampered = isBlockTampered || isLiveTampered;
+              const isExpanded = expandedCases.has(cid);
+
+              return (
+                <div key={cid} className="card" style={{marginBottom:0, border: isTampered ? '1px solid rgba(239,68,68,0.5)' : '1px solid var(--border)'}}>
+                  <div style={{display:'flex', alignItems:'center', justify: 'space-between', cursor:'pointer', userSelect:'none'}} onClick={() => toggleCaseExpand(cid)}>
+                    <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+                      <span style={{fontSize:'20px', color: isTampered ? '#ef4444' : 'var(--accent)'}}>📁</span>
+                      <div>
+                        <div style={{fontWeight:700, fontSize:'15px', color:'var(--text)'}}>{esc(caseName)}</div>
+                        <div className="mono" style={{fontSize:'12px', color:'var(--text-faint)'}}>Case ID: {esc(cid)} · {caseBlocks.length} Document Blocks</div>
+                      </div>
+                    </div>
+                    <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
+                      {isTampered ? (
+                        <span className="tag crit" style={{background:'rgba(239,68,68,0.2)', color:'#ef4444', border:'1px solid rgba(239,68,68,0.4)', fontWeight:700}}>
+                          🔴 {isLiveTampered ? 'DATABASE TAMPERED' : 'BLOCK TAMPERED'}
+                        </span>
+                      ) : (
+                        <span className="tag low" style={{background:'rgba(16,185,129,0.15)', color:'#10b981', border:'1px solid rgba(16,185,129,0.3)', fontWeight:700}}>🟢 VERIFIED</span>
+                      )}
+                      <span style={{fontSize:'13px', color:'var(--accent)', fontWeight:600}}>{isExpanded ? '▲ Hide Details' : '▼ Audit Verification'}</span>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{marginTop:'14px', paddingTop:'14px', borderTop:'1px dashed var(--border)'}}>
+                      {/* Live Cryptographic Fingerprint Verification Card */}
+                      {liveAudit && (
+                        <div style={{marginBottom:'14px', padding:'14px', borderRadius:'12px', background: isLiveTampered ? 'rgba(239,68,68,0.08)' : 'var(--bg1)', border: isLiveTampered ? '1px solid rgba(239,68,68,0.3)' : '1px solid var(--border)'}}>
+                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'8px'}}>
+                            <div style={{fontWeight:700, fontSize:'13px', color:'var(--text)'}}>
+                              {isLiveTampered ? `🔴 Live Graph Database Tampering Flagged (${(liveAudit.tampered_document_types || []).join(', ') || 'Graph Mismatch'})` : '🟢 Live Neo4j Graph Integrity Proof'}
+                            </div>
+                            <span className="mono" style={{fontSize:'11px', color:'var(--text-faint)'}}>{liveAudit.verification_timestamp}</span>
+                          </div>
+                          <div className="cards-grid" style={{gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'10px', marginBottom:0}}>
+                            <div>
+                              <div style={{fontSize:'11px', color:'var(--text-faint)', marginBottom:'2px'}}>On-Chain Recorded Merkle Root:</div>
+                              <div className="mono" style={{fontSize:'10.5px', color:'var(--accent)', wordBreak:'break-all', background:'var(--surface)', padding:'6px', borderRadius:'6px', border:'1px solid var(--border)'}}>
+                                {esc(liveAudit.merkle_root)}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{fontSize:'11px', color:'var(--text-faint)', marginBottom:'2px'}}>Live Graph Fingerprint Hash:</div>
+                              <div className="mono" style={{fontSize:'10.5px', color: isLiveTampered ? '#ef4444' : '#10b981', wordBreak:'break-all', background:'var(--surface)', padding:'6px', borderRadius:'6px', border: isLiveTampered ? '1px solid rgba(239,68,68,0.4)' : '1px solid var(--border)'}}>
+                                {esc(liveAudit.graph_fingerprint)}
+                              </div>
+                            </div>
+                          </div>
+                          {isLiveTampered && (
+                            <div style={{marginTop:'10px', fontSize:'12px', color:'#ef4444', fontWeight:600, display:'flex', alignItems:'center', gap:'6px'}}>
+                              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                              Document Tampering Detected: Live Neo4j records in domain {(liveAudit.tampered_document_types || []).map(t => `'${t}'`).join(', ')} contain modified database fields.
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div style={{fontWeight:700, fontSize:'13px', marginBottom:'10px', color:'var(--text-dim)'}}>Associated Document Evidence Blocks ({caseBlocks.length}):</div>
+                      <div className="cards-grid" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))'}}>
+                        {caseBlocks.length ? caseBlocks.map(b => {
+                          const isTypeTampered = liveAudit && (liveAudit.tampered_document_types || []).includes(b.document_type);
+                          const isBlockValid = b.is_valid !== false;
+                          const isValid = isBlockValid && !isTypeTampered;
+                          const icon = docIconMap[b.document_type] || '📁';
+                          return (
+                            <div key={b.document_id || b.index} className="card" style={{marginBottom:0, background:'var(--surface-hover)', border: isValid ? '1px solid var(--border)' : '1px solid rgba(239,68,68,0.4)'}}>
+                              <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', marginBottom:'10px'}}>
+                                <span style={{fontSize:'22px'}}>{icon}</span>
+                                {isValid ? (
+                                  <span className="tag low">VERIFIED</span>
+                                ) : (
+                                  <span className="tag crit" style={{background:'rgba(239,68,68,0.2)', color:'#ef4444', border:'1px solid rgba(239,68,68,0.4)', fontWeight:700}}>
+                                    🔴 {!isBlockValid ? 'BLOCK TAMPERED' : `${b.document_type} DB TAMPERED`}
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{fontWeight:700, fontSize:'14px', color:'var(--text)', marginBottom:'4px'}}>{esc(b.document_name || b.document_type)}</div>
+                              <div className="mono" style={{fontSize:'11px', color:'var(--text-faint)', marginBottom:'10px'}}>ID: {esc(b.document_id)} · Block #{b.index}</div>
+                              <div style={{fontSize:'11px', color:'var(--text-dim)', marginBottom:'4px'}}>Evidence Payload Hash:</div>
+                              <div className="mono" style={{fontSize:'10.5px', color: isValid ? 'var(--accent)' : '#ef4444', wordBreak:'break-all', background:'var(--bg1)', padding:'6px', borderRadius:'6px', border:'1px solid var(--border)'}}>
+                                {esc(b.evidence_hash)}
+                              </div>
+                              <div style={{fontSize:'11px', color:'var(--text-faint)', marginTop:'8px', textAlign:'right'}}>{esc(b.formatted_time)}</div>
+                            </div>
+                          );
+                        }) : (
+                          <div className="empty" style={{gridColumn:'1/-1'}}>No document evidence blocks logged yet for this case.</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Immutable Block History Ledger</div>
+          <span className="tag plain">{blocks.length} Blocks</span>
+        </div>
+        <div className="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Block #</th>
+                <th>Case ID</th>
+                <th>Document Name / Type</th>
+                <th>Timestamp</th>
+                <th>Evidence Hash (SHA-256)</th>
+                <th>Merkle Root</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {blocks.filter(b => b.case_id !== 'SYSTEM_GENESIS' && b.document_type !== 'SYSTEM_GENESIS').map(b => {
+                const isValid = b.is_valid !== false;
+                return (
+                  <tr key={b.index} style={!isValid ? {background:'rgba(239,68,68,0.06)'} : {}}>
+                    <td className="mono"><b>#{b.index}</b></td>
+                    <td><span className="tag open mono" style={{cursor:'pointer'}} onClick={() => toggleCaseExpand(b.case_id)}>{esc(b.case_id)}</span></td>
+                    <td><b>{esc(b.document_name || b.document_type || 'CASE_MASTER')}</b> <span className="mono" style={{fontSize:'11px', color:'var(--text-faint)'}}>({esc(b.document_type)})</span></td>
+                    <td style={{fontSize:'12px', color:'var(--text-dim)'}}>{esc(b.formatted_time)}</td>
+                    <td className="mono" style={{fontSize:'11px'}} title={esc(b.evidence_hash)}>{esc(b.evidence_hash?.substring(0, 16))}…</td>
+                    <td className="mono" style={{fontSize:'11px'}} title={esc(b.merkle_root)}>{esc(b.merkle_root?.substring(0, 16))}…</td>
+                    <td>{isValid ? <span className="tag low">VERIFIED</span> : <span className="tag crit" style={{background:'rgba(239,68,68,0.2)', color:'#ef4444', border:'1px solid rgba(239,68,68,0.4)', fontWeight:700}}>TAMPERED</span>}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Case Registry ----------
+function CaseRegistryModule({ cases, fetchCases, selectedCase, setSelectedCase, openAiDossier, promptDeleteCase, changeView, theme, addToast }) {
+  const [statusFilter, setStatusFilter] = useState('');
+  const [caseDetail, setCaseDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const miniGraphRef = useRef(null);
+
+  const filteredCases = useMemo(() => {
+    if (!statusFilter) return cases;
+    return cases.filter(c => (c.status || '').toUpperCase() === statusFilter.toUpperCase());
+  }, [cases, statusFilter]);
+
+  const loadCaseDetail = useCallback(async (id) => {
+    setSelectedCase(id);
+    setLoadingDetail(true);
+    try {
+      const c = await API.get(`/api/cases/${encodeURIComponent(id)}`);
+      setCaseDetail(c);
+    } catch (e) {
+      addToast(e.message, 'err');
+      setCaseDetail(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, [setSelectedCase, addToast]);
+
+  useEffect(() => {
+    if (selectedCase) {
+      loadCaseDetail(selectedCase);
+    }
+  }, [selectedCase, loadCaseDetail]);
+
+  // Mini graph visualization inside case detail
+  useEffect(() => {
+    if (!caseDetail || !miniGraphRef.current || typeof vis === 'undefined' || !vis.Network) return;
+    let isMounted = true;
+    async function renderMiniGraph() {
+      try {
+        const g = await API.get(`/api/graph?case_id=${encodeURIComponent(caseDetail.case_id)}&limit=400`);
+        if (!isMounted || !miniGraphRef.current) return;
+
+        const isLight = theme === 'light';
+        const seenNodeIds = new Set();
+        const nodes = [];
+        (g.nodes || []).forEach(n => {
+          if (n && n.id && !seenNodeIds.has(n.id)) {
+            seenNodeIds.add(n.id);
+            nodes.push({
+              id: n.id, label: n.name || n.id, size: 12, shape: 'dot',
+              color: { background: LABEL_COLOR[n.labels?.[0]] || '#94a3b8', border: isLight ? '#ffffff' : '#070a12' },
+              font: { color: isLight ? '#0f172a' : '#cbd5e1', size: 11 }
+            });
+          }
+        });
+
+        const seenEdgeIds = new Set();
+        const edges = [];
+        (g.edges || []).forEach((e, idx) => {
+          if (!e || !e.source || !e.target) return;
+          let edgeId = String(e.id || `edge_${e.source}_${e.type}_${e.target}_${idx}`);
+          if (seenEdgeIds.has(edgeId)) edgeId = `${edgeId}_${idx}`;
+          seenEdgeIds.add(edgeId);
+          edges.push({
+            id: edgeId, from: e.source, to: e.target, arrows: 'to',
+            color: { color: isLight ? 'rgba(51, 65, 85, 0.4)' : 'rgba(148, 163, 184, 0.4)' }
+          });
+        });
+
+        const seed = getDeterministicSeed(caseDetail.case_id);
+        new vis.Network(miniGraphRef.current, { nodes, edges }, {
+          layout: { randomSeed: seed, improvedLayout: true },
+          physics: {
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: { gravitationalConstant: -55, centralGravity: 0.015, springLength: 150, springConstant: 0.07, damping: 0.52, avoidOverlap: 0.85 },
+            stabilization: { iterations: 140 }
+          },
+          nodes: { borderWidth: 2 }, edges: { width: 1.2 }
+        });
+      } catch (e) {}
+    }
+    renderMiniGraph();
+    return () => { isMounted = false; };
+  }, [caseDetail, theme]);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Case Registry</div>
+          <div className="row" style={{gap:'10px'}}>
+            <div className="field" style={{maxWidth:'180px'}}>
+              <select className="control" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="">All Statuses</option>
+                <option>OPEN</option>
+                <option>UNDER_INVESTIGATION</option>
+                <option>CHARGED</option>
+                <option>CLOSED</option>
+              </select>
+            </div>
+            <button className="neu-btn ghost" onClick={fetchCases}>
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div className="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Case Identifier</th>
+                <th>Type</th>
+                <th>Jurisdiction</th>
+                <th>Lead Investigator</th>
+                <th>Entities</th>
+                <th>Status</th>
+                <th>AI Insights</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!filteredCases.length ? (
+                <tr><td colSpan="8"><div className="empty">No cases registered matching criteria.</div></td></tr>
+              ) : (
+                filteredCases.map(x => (
+                  <tr key={x.case_id} style={{cursor:'pointer'}} onClick={() => loadCaseDetail(x.case_id)}>
+                    <td>
+                      <div style={{fontWeight:700, color:'var(--text)'}}>{esc(x.case_name || x.case_id)}</div>
+                      <div className="mono" style={{color:'var(--text-faint)'}}>{esc(x.case_id)}</div>
+                    </td>
+                    <td>{esc(x.case_type || '—')}</td>
+                    <td>{esc(x.jurisdiction || '—')}</td>
+                    <td>{esc(x.lead_investigator || '—')}</td>
+                    <td className="mono"><b>{x.total_entities}</b></td>
+                    <td><span className={`tag ${(x.status || 'open').toLowerCase().includes('close') ? 'closed' : 'open'}`}>{esc(x.status || 'OPEN')}</span></td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <button className="neu-btn ghost" style={{padding:'4px 9px', fontSize:'11.5px', color:'var(--accent)', display:'inline-flex', alignItems:'center', gap:'6px'}} onClick={() => openAiDossier(x.case_id, x.case_name || x.case_id)}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                        ✨ AI Dossier
+                      </button>
+                    </td>
+                    <td style={{textAlign:'right'}} onClick={e => e.stopPropagation()}>
+                      <button className="neu-btn danger" style={{padding:'5px 10px', fontSize:'12px'}} onClick={() => promptDeleteCase(x.case_id, x.case_name || x.case_id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {loadingDetail && <div className="skeleton sk-row"></div>}
+
+      {caseDetail && !loadingDetail && (
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+                <div className="card-title">{esc(caseDetail.metadata?.case_name || caseDetail.case_id)}</div>
+                <span className={`tag ${(caseDetail.metadata?.status || 'open').toLowerCase().includes('close') ? 'closed' : 'open'}`}>{esc(caseDetail.metadata?.status || 'OPEN')}</span>
+              </div>
+              <div className="mono" style={{color:'var(--text-faint)', fontSize:'12px', marginTop:'2px'}}>{esc(caseDetail.case_id)}</div>
+            </div>
+            <div style={{display:'flex', gap:'10px', flexWrap:'wrap'}}>
+              <button className="neu-btn primary" onClick={() => openAiDossier(caseDetail.case_id, caseDetail.metadata?.case_name || caseDetail.case_id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight:'4px'}}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                ✨ AI Dossier
+              </button>
+              <button className="neu-btn ghost" onClick={() => changeView('graph')}>Explore in Graph</button>
+              <button className="neu-btn danger" onClick={() => promptDeleteCase(caseDetail.case_id, caseDetail.metadata?.case_name || caseDetail.case_id)}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Delete Case
+              </button>
+            </div>
+          </div>
+
+          {caseDetail.metadata?.summary && <div style={{fontSize:'14px', color:'var(--text-dim)', marginBottom:'18px', lineHeight:1.6}}>{esc(caseDetail.metadata.summary)}</div>}
+
+          <div className="kv" style={{gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))'}}>
+            {caseDetail.metadata?.case_type && <div><div className="k">Investigation Type</div><div className="v">{esc(caseDetail.metadata.case_type)}</div></div>}
+            {caseDetail.metadata?.jurisdiction && <div><div className="k">Jurisdiction</div><div className="v">{esc(caseDetail.metadata.jurisdiction)}</div></div>}
+            {caseDetail.metadata?.lead_investigator && <div><div className="k">Lead Investigator</div><div className="v">{esc(caseDetail.metadata.lead_investigator)}</div></div>}
+            {caseDetail.metadata?.created_date && <div><div className="k">Date Filed</div><div className="v">{esc(caseDetail.metadata.created_date)}</div></div>}
+            <div><div className="k">Total Entities</div><div className="v mono">{caseDetail.total_entities}</div></div>
+          </div>
+
+          <div style={{fontWeight:700, fontSize:'14px', margin:'22px 0 10px'}}>Entity Breakdown</div>
+          {Object.entries(caseDetail.entity_breakdown || {}).map(([k, v]) => (
+            <div key={k} className="list-row">
+              <div className="l-name">{esc(k)}</div>
+              <span className="tag plain mono">{v}</span>
+            </div>
+          ))}
+
+          <div style={{marginTop:'20px'}}>
+            <div ref={miniGraphRef} style={{height:'360px', borderRadius:'12px', border:'1px solid var(--border)', background:'var(--graph-bg)', overflow:'hidden'}}></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Sub-Module: Data Ingestion ----------
+function DataIngestionModule({ fetchCases, changeView, addToast }) {
+  const [dragActive, setDragActive] = useState(false);
+  const [rawText, setRawText] = useState('');
+  const [ingestResult, setIngestResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFiles = async (files) => {
+    if (!files || !files.length) return;
+    const fd = new FormData();
+    Array.from(files).forEach(f => fd.append('files', f));
+
+    setLoading(true);
+    addToast(`Uploading ${files.length} file(s)…`, 'info');
+
+    try {
+      const res = await API.send('/api/v1/ingest', { method: 'POST', body: fd, form: true });
+      setIngestResult(res);
+      addToast('Data ingested successfully', 'ok');
+      fetchCases();
+    } catch (e) {
+      addToast(`Ingestion failed: ${e.message}`, 'err');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRawTextIngest = async () => {
+    if (!rawText.trim()) { addToast('Please provide narrative text to ingest', 'info'); return; }
+    setLoading(true);
+
+    try {
+      const res = await API.send('/api/v1/ingest/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: rawText.trim(),
+        form: false
+      });
+      setIngestResult(res);
+      addToast('Text ingested successfully', 'ok');
+      fetchCases();
+    } catch (e) {
+      addToast(`Ingestion failed: ${e.message}`, 'err');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Upload Investigation Data Files</div></div>
+        <div
+          id="dropZone"
+          style={{
+            display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:'14px', padding:'34px',
+            border: dragActive ? '2px dashed var(--accent)' : '2px dashed var(--border)', borderRadius:'var(--radius)', background:'var(--bg1)', transition:'.2s'
+          }}
+          onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={e => { e.preventDefault(); setDragActive(false); handleFiles(e.target.files); }}
+        >
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14m-7-7h14"/><path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          <div style={{color:'var(--text-dim)', fontSize:'14px', textAlign:'center'}}>
+            Drag & drop structured case JSON, CDR / Telecom CSV, Bank statements, or FIR narratives
+          </div>
+          <input type="file" ref={fileInputRef} multiple hidden onChange={e => handleFiles(e.target.files)} />
+          <button className="neu-btn primary" disabled={loading} onClick={() => fileInputRef.current?.click()}>{loading ? 'Uploading…' : 'Select Files'}</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header"><div className="card-title">Direct Narrative / FIR Text Ingestion</div></div>
+        <textarea className="control" rows="6" value={rawText} onChange={e => setRawText(e.target.value)} placeholder="Paste unformatted case narrative, FIR description, or CDR tabular text directly here…" style={{width:'100%', resize:'vertical'}}></textarea>
+        <div className="row" style={{marginTop:'14px'}}>
+          <button className="neu-btn primary" disabled={loading} onClick={handleRawTextIngest}>{loading ? 'Ingesting…' : 'Ingest Narrative Text'}</button>
+        </div>
+      </div>
+
+      {ingestResult && (
+        <div className="card">
+          <div className="card-header"><div className="card-title">Ingestion Summary</div></div>
+          <div>
+            <div className="cards-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))'}}>
+              <div className="stat-card" style={{'--glow': 'rgba(0, 210, 255, 0.2)'}}>
+                <div className="stat-label">Nodes Created</div>
+                <div className="stat-value">{ingestResult.created?.nodes || 0}</div>
+              </div>
+              <div className="stat-card" style={{'--glow': 'rgba(99, 102, 241, 0.2)'}}>
+                <div className="stat-label">Relationships</div>
+                <div className="stat-value">{ingestResult.created?.relationships || 0}</div>
+              </div>
+              <div className="stat-card" style={{'--glow': 'rgba(16, 185, 129, 0.2)'}}>
+                <div className="stat-label">Source Records</div>
+                <div className="stat-value">{ingestResult.created?.source_records || 0}</div>
+              </div>
+              <div className="stat-card" style={{'--glow': 'rgba(245, 158, 11, 0.2)'}}>
+                <div className="stat-label">New Insights</div>
+                <div className="stat-value">{ingestResult.new_insights || 0}</div>
+              </div>
+            </div>
+
+            <div style={{display:'flex', gap:'10px', flexWrap:'wrap', margin:'10px 0 16px'}}>
+              <span className="tag open">Case {esc(ingestResult.case_id)}</span>
+              <span className="tag plain">Matched Existing: {ingestResult.matched_existing_entities || 0}</span>
+              <span className="tag plain">Cross-Case Links: {ingestResult.new_cross_case_links || 0}</span>
+            </div>
+
+            {(ingestResult.warnings || []).length > 0 && (
+              <div style={{background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.25)', padding:'12px 16px', borderRadius:'12px', fontSize:'13px', color:'var(--amber)', marginBottom:'14px'}}>
+                {ingestResult.warnings.map((w, idx) => <div key={idx}>⚠ {esc(w)}</div>)}
+              </div>
+            )}
+
+            <div style={{display:'flex', gap:'10px'}}>
+              <button className="neu-btn primary" onClick={() => changeView('insights')}>Review Generated Insights</button>
+              <button className="neu-btn ghost" onClick={() => changeView('cases')}>View in Case Registry</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Modal Content Components ----------
+function EntityModalContent({ data, onClose, openEntityModal }) {
+  const p = data.properties || {};
+  const keys = Object.keys(p).filter(k => !['case_ids', 'created_at', 'updated_at'].includes(k));
+
+  return (
+    <React.Fragment>
+      <button className="close neu-btn ghost" onClick={onClose} style={{float:'right'}}>✕</button>
+      <h3>{esc(data.labels?.[0] || 'Entity')} · {esc(data.entity_id)}</h3>
+      <div style={{display:'flex', gap:'18px', alignItems:'center', marginBottom:'18px'}}>
+        <div className="stat-card" style={{minWidth:'130px', padding:'14px', '--glow': 'rgba(0, 210, 255, 0.2)'}}>
+          <div className="stat-value" style={{fontSize:'24px'}}>{data.total_connections}</div>
+          <div className="stat-label">Direct Connections</div>
+        </div>
+        <div style={{fontSize:'13px', color:'var(--text-dim)'}}>
+          Full entity record with immediate 1-hop associations across all linked investigation files.
+        </div>
+      </div>
+      <div style={{fontWeight:700, fontSize:'14px', margin:'12px 0 6px'}}>Stored Attributes</div>
+      <div className="kv">
+        {keys.length ? keys.map(k => (
+          <div key={k}>
+            <div className="k">{esc(k)}</div>
+            <div className="v mono">{esc(typeof p[k] === 'object' ? JSON.stringify(p[k]) : p[k])}</div>
+          </div>
+        )) : <div style={{gridColumn:'1/-1', color:'var(--text-faint)'}}>No attributes available</div>}
+      </div>
+      <div style={{fontWeight:700, fontSize:'14px', margin:'20px 0 8px'}}>Connected Entities ({data.total_connections})</div>
+      {(data.connections || []).length ? data.connections.map(c => (
+        <div key={c.neighbor_id} className="result-item" style={{cursor:'default'}}>
+          <div className="result-main">
+            <div className="result-name">{esc(c.neighbor_name || c.neighbor_id)}</div>
+            <div className="result-sub">{c.direction === 'OUTGOING' ? '→ OUTGOING' : '← INCOMING'} · <span className="tag plain">{esc(c.relationship)}</span></div>
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <span className="tag plain">{(c.neighbor_labels || []).join(', ')}</span>
+            <button className="neu-btn ghost" style={{padding:'4px 8px', fontSize:'11px'}} onClick={() => { onClose(); openEntityModal(c.neighbor_id); }}>Inspect</button>
+          </div>
+        </div>
+      )) : <div className="empty">No direct 1-hop connections registered.</div>}
+    </React.Fragment>
+  );
+}
+
+function AiDossierModalContent({ caseId, caseName, onClose }) {
+  const [ai, setAi] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchAi() {
+      try {
+        const res = await API.get(`/api/cases/${encodeURIComponent(caseId)}/ai-insights`);
+        if (isMounted) setAi(res);
+      } catch (err) {
+        if (isMounted) setError(err.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    fetchAi();
+    return () => { isMounted = false; };
+  }, [caseId]);
+
+  const riskColor = ai?.risk_level === 'CRITICAL' ? '#f43f5e' : (ai?.risk_level === 'HIGH' ? '#f59e0b' : '#10b981');
+
+  return (
+    <div style={{minWidth:'320px', maxWidth:'720px', padding:'6px 0'}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'14px'}}>
+        <div>
+          <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+            <h3 style={{margin:0, display:'inline-flex', alignItems:'center', gap:'8px'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              AI Case Intelligence Dossier
+            </h3>
+            <span className="tag open" style={{background:'rgba(0, 210, 255, 0.15)', color:'var(--accent)', borderColor:'rgba(0, 210, 255, 0.3)', fontSize:'11px'}}>AI Engine</span>
+          </div>
+          <div style={{fontSize:'13px', color:'var(--text-dim)', marginTop:'3px'}}>{esc(caseName || caseId)} (<span className="mono">{esc(caseId)}</span>)</div>
+        </div>
+        <button className="neu-btn ghost" onClick={onClose} style={{padding:'4px 8px'}}>✕</button>
+      </div>
+
+      {loading ? (
+        <div style={{padding:'40px 20px', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px'}}>
+          <div className="status-dot" style={{width:'16px', height:'16px', background:'var(--accent)', animation:'pulse 1s infinite'}}></div>
+          <div style={{fontWeight:600, fontSize:'14px'}}>Synthesizing forensic intelligence with AI Engine…</div>
+          <div style={{fontSize:'12.5px', color:'var(--text-faint)'}}>Correlating suspects, transaction chains, and graph anomalies from Neo4j</div>
+        </div>
+      ) : error ? (
+        <div className="empty" style={{color:'var(--red)'}}>Failed to generate AI insights: {error}</div>
+      ) : (
+        <div>
+          <div style={{display:'flex', gap:'10px', marginBottom:'16px', alignItems:'center', background:'var(--bg1)', padding:'10px 14px', borderRadius:'10px', border:'1px solid var(--border)', flexWrap:'wrap'}}>
+            <span className="tag" style={{background:`${riskColor}22`, color: riskColor, border:`1px solid ${riskColor}44`, fontWeight:700}}>
+              RISK LEVEL: {esc(ai.risk_level)}
+            </span>
+            <div style={{fontSize:'12px', color:'var(--text-faint)', flex:1, textAlign:'right'}}>
+              Analyzed by <b>{esc(ai.ai_model)}</b> · Live Neo4j Sync
+            </div>
+          </div>
+
+          <div style={{marginBottom:'16px'}}>
+            <div style={{fontWeight:700, fontSize:'13.5px', marginBottom:'6px', color:'var(--text)'}}>Executive Forensic Summary</div>
+            <div style={{fontSize:'13px', lineHeight:1.6, color:'var(--text)', background:'var(--surface)', padding:'12px', borderRadius:'8px', border:'1px solid var(--border)'}}>
+              {esc(ai.executive_summary)}
+            </div>
+          </div>
+
+          {ai.modus_operandi && (
+            <div style={{marginBottom:'16px'}}>
+              <div style={{fontWeight:700, fontSize:'13.5px', marginBottom:'6px', color:'var(--text)'}}>Modus Operandi & Syndicate Structure</div>
+              <div style={{fontSize:'12.5px', lineHeight:1.6, color:'var(--text-dim)', background:'var(--surface)', padding:'12px', borderRadius:'8px', border:'1px solid var(--border)'}}>
+                {esc(ai.modus_operandi)}
+              </div>
+            </div>
+          )}
+
+          <div className="cards-grid" style={{gridTemplateColumns: '1fr 1fr', gap:'14px', marginBottom:'16px'}}>
+            <div style={{background:'var(--surface)', padding:'12px', borderRadius:'8px', border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:700, fontSize:'13px', marginBottom:'8px', color:'var(--accent)'}}>Key Suspects & Roles</div>
+              <ul style={{margin:0, paddingLeft:'18px', fontSize:'12px', lineHeight:1.5, color:'var(--text-dim)'}}>
+                {(ai.key_suspects || []).map((s, idx) => <li key={idx} style={{marginBottom:'6px'}}>{esc(s)}</li>)}
+              </ul>
+            </div>
+            <div style={{background:'var(--surface)', padding:'12px', borderRadius:'8px', border:'1px solid var(--border)'}}>
+              <div style={{fontWeight:700, fontSize:'13px', marginBottom:'8px', color:'#f59e0b'}}>Critical Graph Red Flags</div>
+              <ul style={{margin:0, paddingLeft:'18px', fontSize:'12px', lineHeight:1.5, color:'var(--text-dim)'}}>
+                {(ai.critical_anomalies || []).map((a, idx) => <li key={idx} style={{marginBottom:'6px'}}>{esc(a)}</li>)}
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <div style={{fontWeight:700, fontSize:'13.5px', marginBottom:'8px', color:'var(--text)', display:'flex', alignItems:'center', gap:'6px'}}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Actionable Law Enforcement Next Steps
+            </div>
+            <div style={{background:'rgba(0, 210, 255, 0.05)', border:'1px solid rgba(0, 210, 255, 0.2)', padding:'12px', borderRadius:'8px'}}>
+              <ol style={{margin:0, paddingLeft:'18px', fontSize:'12.5px', lineHeight:1.6, color:'var(--text)'}}>
+                {(ai.investigative_leads || []).map((l, idx) => <li key={idx} style={{marginBottom:'8px', fontWeight:500}}>{esc(l)}</li>)}
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResetDbConfirmContent({ onClose, addToast, onSuccess }) {
+  const [wiping, setWiping] = useState(false);
+  const handleExecute = async () => {
+    setWiping(true);
+    try {
+      const res = await API.delete('/api/cases/reset?confirm=true');
+      onClose();
+      addToast(res.message || 'Graph database cleared.', 'ok');
+      onSuccess();
+    } catch (e) {
+      addToast(`Database reset failed: ${e.message}`, 'err');
+      setWiping(false);
+    }
+  };
+
+  return (
+    <div className="confirm-box">
+      <div className="confirm-header">
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <div className="confirm-title" style={{color:'var(--danger)'}}>Reset Entire Graph Database?</div>
+      </div>
+      <div className="confirm-body">
+        This operation executes a complete database wipe (<span className="mono">MATCH (n) DETACH DELETE n</span>).
+        <br/><br/>
+        <b style={{color:'var(--red)'}}>All cases, persons, phones, accounts, vehicles, and forensic logs will be permanently deleted.</b>
+        This action cannot be undone.
+      </div>
+      <div className="confirm-actions">
+        <button className="neu-btn ghost" onClick={onClose}>Cancel</button>
+        <button className="neu-btn danger" disabled={wiping} onClick={handleExecute}>
+          {wiping ? 'Wiping database…' : 'Yes, Wipe Everything'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeleteCaseConfirmContent({ caseId, caseName, onClose, addToast, onSuccess }) {
+  const [deleting, setDeleting] = useState(false);
+  const handleExecute = async () => {
+    setDeleting(true);
+    try {
+      const res = await API.delete(`/api/cases/${encodeURIComponent(caseId)}?confirm=true`);
+      onClose();
+      addToast(`Case ${caseId} deleted: ${res.nodes_removed} nodes removed, ${res.nodes_detached} shared nodes preserved.`, 'ok');
+      onSuccess();
+    } catch (e) {
+      addToast(`Failed to delete case: ${e.message}`, 'err');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="confirm-box">
+      <div className="confirm-header">
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <div className="confirm-title">Confirm Case Deletion</div>
+      </div>
+      <div className="confirm-body">
+        Are you sure you want to permanently delete case <b style={{color:'var(--text)'}}>{esc(caseName || caseId)}</b> (<span className="mono">{esc(caseId)}</span>)?
+        <br/><br/>
+        <b style={{color:'var(--amber)'}}>Integrity Preservation:</b>
+        <ul style={{margin:'8px 0 0 18px', fontSize:'13px', lineHeight:1.6}}>
+          <li>Entities exclusively owned by this case will be permanently removed.</li>
+          <li>Entities shared with other cases will be <b>preserved</b> (only unlinked from this case).</li>
+          <li>All case-specific communication and transaction relationships will be purged.</li>
+        </ul>
+      </div>
+      <div className="confirm-actions">
+        <button className="neu-btn ghost" onClick={onClose}>Cancel</button>
+        <button className="neu-btn danger" disabled={deleting} onClick={handleExecute}>
+          {deleting ? 'Deleting…' : 'Confirm & Delete Case'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Mount React Root
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

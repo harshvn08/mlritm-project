@@ -1,0 +1,624 @@
+<div align="center">
+
+# ⚖️ ATLAS: Criminal Network Analysis System
+### AI-Powered Multi-Modal Forensic Graph Intelligence Platform
+
+<br/>
+<p align="center">
+  <img src="https://img.shields.io/badge/VERSION-2.0-00F5D4?style=for-the-badge&logo=semanticrelease&logoColor=black" alt="Version 2.0" />
+  <img src="https://img.shields.io/badge/PROTOTYPE_STATUS-EVALUATION_READY_🟢-00F5D4?style=for-the-badge&logo=radar&logoColor=black" alt="Status" />
+  <img src="https://img.shields.io/badge/TEST_HARNESS-228%20PASSED%20(100%25)-00E676?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests" />
+  <img src="https://img.shields.io/badge/OFFICER_AUTH-ROLE_BASED_ACCESS-3B82F6?style=for-the-badge&logo=auth0&logoColor=white" alt="Officer Auth" />
+  <img src="https://img.shields.io/badge/AI_COPILOT-HOSTED_LLM_+_HEURISTICS-7928CA?style=for-the-badge&logo=openai&logoColor=white" alt="AI Copilot" />
+  <img src="https://img.shields.io/badge/GRAPH_CORE-NEO4J_5.27_AURA-008CC1?style=for-the-badge&logo=neo4j&logoColor=white" alt="Neo4j" />
+  <img src="https://img.shields.io/badge/CHAIN_OF_CUSTODY-SHA--256_HASH_CHAIN-FF9900?style=for-the-badge&logo=blockchaindotcom&logoColor=white" alt="Evidence Ledger" />
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/REACT-19.x-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/TYPESCRIPT-5.6_STRICT-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/TAILWIND_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/VITE-5.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/FASTAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+</p>
+
+---
+
+<p align="center">
+  <b>An enterprise AI-assisted criminal network analysis platform engineered for law enforcement agencies, cybercrime cells, and forensic task forces.<br/>
+  Harmonizes fragmented multi-jurisdiction records (FIRs, CDRs, CCTV ANPR, Banking Wires) into an interconnected property graph, secures officer access with dynamic badge authentication, executes 10 algorithmic Cypher detectors, anchors evidentiary integrity in an immutable SHA-256 Merkle ledger, and assists investigators via an interactive Hosted LLM Graph Copilot with offline heuristic fallback.</b>
+</p>
+
+</div>
+
+## Local-first Windows startup (no Neo4j or API keys)
+
+Run `start.bat` from the project root. It checks for Python and Node.js, creates `.venv`, installs requirements and frontend dependencies, initializes a persistent SQLite database at `data/atlas_local.sqlite3`, then opens backend and frontend terminals. Open <http://localhost:3000>. No Neo4j instance, cloud database, API key, or `.env` setup is required for local case ingestion. Source documents and extracted graph data remain in the local `data/` folder. Optional Gemini and Neo4j integrations remain available only when separately configured; SQLite is the default storage backend.
+
+For a public, persistent single-service deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Extraction uses the existing deterministic offline parsers; optional local entity patterns recognize labeled metadata, emails, IPs, and phone numbers. Extraction is limited by source formatting. Displayed associations cite their source and are candidates for human verification, not allegations.
+
+---
+
+## 📑 Command Center Navigation
+
+| 🎨 [Frontend](frontend/README.md) | ⚙️ [Backend](backend/README.md) | 📂 [Dataset](dataset/README.md) | 🧪 [Tests](tests/README.md) | 🔒 [Blockchain](data/README.md) | 📑 [Documentation](docs/README.md) |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| React 19 + TypeScript + Tailwind CSS | FastAPI & Cypher Engine | Multi-Modal Forensic Files | 228 Passing Tests | SHA-256 Merkle Ledger | Technical Specifications |
+
+
+---
+
+## 🖥️ Live Prototype Interface & Walkthrough Video
+
+The interactive single-page analyst workspace built with **React 19**, **TypeScript (strict mode)**, and **Tailwind CSS**, bundled via **Vite 5**:
+
+### 🎬 System Demonstration Video
+
+<div align="center">
+  <a href="https://youtu.be/nm0dIAtuUTM" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/nm0dIAtuUTM/maxresdefault.jpg" width="100%" alt="ATLAS System Demonstration Video on YouTube" />
+    <br/><br/>
+    <img src="https://img.shields.io/badge/YOUTUBE-WATCH_FULL_DEMO_▶-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch on YouTube" />
+  </a>
+  <p><i>🎬 Click above to watch the complete end-to-end operational walkthrough on YouTube.</i></p>
+</div>
+
+<br/>
+
+### 📸 Core Operational Interfaces
+
+<div align="center">
+  <img src="docs/assets/v2_home_portal.png" width="100%" alt="ATLAS Forensic Home Portal" />
+  <p><i>Figure 1: Interactive Forensic Landing Portal displaying system readiness, live Neo4j database status, and pipeline stages.</i></p>
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="docs/assets/v2_officer_auth.png" width="100%" alt="ATLAS Terminal Authentication" />
+  <p><i>Figure 2: Dynamic Multi-Officer Terminal Authentication modal with official badge ID, security passcode, and clearance verification.</i></p>
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="docs/assets/v2_command_center.png" width="100%" alt="Atlas Command Center Dashboard" />
+  <p><i>Figure 3: Analyst Command Center Dashboard displaying ecosystem metrics (523 entities, 192 insights), active investigations, entity distribution histograms, and threat severity mix.</i></p>
+</div>
+
+<br/>
+
+---
+
+## ⚡ Reproducible 3-Minute Evaluator Demo Script
+
+Judges and evaluators can verify the complete end-to-end investigative workflow in under 3 minutes using the bundled forensic datasets:
+
+```
+[Step 1: Start System] ──► [Step 2: Ingest Case 001] ──► [Step 3: Ingest Case 002 (Bridge Discovered)]
+                                                                    │
+[Step 6: Verify Ledger] ◄── [Step 5: Query AI Copilot] ◄── [Step 4: Run 10 Detectors]
+```
+
+### Step 1: Launch the Application
+```powershell
+# Option A: 1-Click Launch (Windows — Recommended)
+.\start_system.bat
+# (Launches FastAPI backend on http://127.0.0.1:8000 and React 19 frontend on http://localhost:3000)
+
+# Option B: Run in Terminals
+# Terminal 1 (Backend):
+python -m uvicorn backend.main:app --reload --port 8000
+# Terminal 2 (Frontend):
+cd frontend && npm run dev
+
+# Option C: Docker Compose (Spins up Neo4j + FastAPI)
+Copy-Item .env.example .env
+# Edit .env and replace NEO4J_PASSWORD with the strong password used for Neo4j.
+docker compose up -d
+```
+Open your browser to: **`http://localhost:3000`** (or backend root **`http://localhost:8000`**)
+
+### Neo4j Development Setup (Required)
+
+The graph backend requires an authenticated Neo4j 5.x database. The existing Compose service uses Neo4j Community **5.20**, persists data in the named `neo4j_data` volume, and exposes Bolt on `localhost:7687` plus the Neo4j Browser on `localhost:7474`. The application connects with `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `NEO4J_DATABASE`; there is no built-in password fallback.
+
+For a local Windows backend/frontend with Neo4j in Docker, copy `.env.example` to `.env`, set a strong `NEO4J_PASSWORD`, then start only Neo4j:
+
+```powershell
+Copy-Item .env.example .env
+# Edit .env and set NEO4J_PASSWORD to a strong local secret.
+docker compose up -d neo4j
+```
+
+Use the local settings `NEO4J_URI=bolt://localhost:7687`, `NEO4J_USERNAME=neo4j`, and `NEO4J_DATABASE=neo4j`. Set the password in `.env` to the same password used when initializing the database. For the full containerized API and database, run `docker compose up -d`; its backend uses `bolt://neo4j:7687` on the Compose network. The frontend can still run locally on port 3000.
+
+If Docker is unavailable, create/start a **Neo4j Desktop or local Neo4j Community 5.x** DBMS with Bolt enabled on port 7687. Set its initial database password to the `NEO4J_PASSWORD` in the ignored local `.env` file (or update `.env` to match the DBMS password), then use the same local URI, username, and database above. For Neo4j Aura, use its `neo4j+s://…` URI, configured username/password, and database name; set all four values in `.env`.
+
+Verify the database and backend before uploading:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/health
+```
+
+The health endpoint must return `status: healthy`. A failed check returns HTTP 503 with a diagnostic; ingestion does not report success when Neo4j is unavailable.
+
+
+### Step 2: Ingest Case 001 (Homicide Investigation)
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/cases/ingest" -Method Post -InFile "dataset/case_001_homicide.json" -ContentType "application/json"
+```
+*Result*: Populates FIR details, suspect phone calls, and vehicle sightings for incident `CASE-2024-001`.
+
+### Step 3: Ingest Case 002 (Corporate Hawala Fraud)
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/cases/ingest" -Method Post -InFile "dataset/case_002_fraud.json" -ContentType "application/json"
+```
+*Evaluator Observation*: Notice how the graph autonomously discovers a **cross-case bridge**! Target **`Vikram Singh`** connects the homicide case directly to the financial laundering syndicate.
+
+### Step 4: Execute 10 Scoped Cypher Pattern Detectors
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/insights" -Method Get
+```
+*Evaluator Observation*: Returns 10 detected patterns in milliseconds, flagging Hawala layering, Burner SIM swapping, and cell tower co-location.
+
+### Step 5: Interrogate the AI Copilot
+Click the **"Ask AI"** button on the dashboard or query via REST API:
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/graph/ai-query" -Method Post `
+  -Body '{"query": "Summarize key suspects and explain how funds are being moved across cases."}' `
+  -ContentType "application/json"
+```
+*Evaluator Observation*: The Copilot synthesizes graph topology, PageRank scores, and transaction chains into plain investigative language. *(If no API key is provided, the built-in heuristic fallback responds instantly with zero errors!)*
+
+### Step 6: Verify Cryptographic Evidence Integrity
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/blockchain/verify" -Method Get
+```
+*Evaluator Observation*: Returns `{"status": "VALID", "total_blocks": 3}`, confirming the SHA-256 hash-chained Merkle ledger is intact.
+
+---
+
+## 🎯 Suspect Dossier & Network Centrality Matrix
+
+In forensic investigations, the system does not claim guilt; rather, it **ranks structurally significant entities and suspicious communication/financial patterns for investigator review**.
+
+### How Entity Resolution is Handled (Preventing False Matches)
+To prevent incorrect identity merging, the prototype uses **deterministic primary business keys**:
+- **Phone Numbers**: E.164 MSISDN international format.
+- **Hardware**: Device IMEI / MAC identifiers.
+- **Financial Accounts**: Normalized IFSC + Account Number pairs.
+- **Government Identifiers**: PAN / Aadhaar / Passport unique hash keys.
+- **Vehicles**: State Registration / License Plate numbers.
+
+*(Entities with matching business keys are merged; entities without shared keys remain distinct nodes for investigator review).*
+
+---
+
+## 🤖 Hosted LLM Graph Copilot
+
+Field investigators and detectives do not have time to construct complex Cypher graph queries. The **Hosted LLM Copilot** is docked directly inside the interactive canvas (`#graphAiPanel`), translating human questions into instant topological and forensic intelligence.
+
+<div align="center">
+  <img src="docs/assets/v2_graph_copilot.png" width="100%" alt="Interactive Graph Explorer with Docked AI Copilot" />
+  <p><i>Figure 4: Network Studio displaying live ForceAtlas2 graph canvas, multi-hop cluster separation, quick extract filters, and docked AI Copilot inference drawer.</i></p>
+</div>
+
+<br/>
+
+### ⚡ One-Click Autonomous Prompt Chips
+- 🔍 **Summarize Key Suspects**: Isolates primary syndicate operatives, aliases, and charge sheets.
+- 💸 **Find Laundering Rings**: Traces structured layering across nominee mule accounts.
+- 🌐 **Explain Cross-Case Connections**: Identifies overlapping entities connecting disconnected FIRs.
+- 👑 **Who is the Central Kingpin?**: Analyzes PageRank and bridge betweenness centrality.
+
+---
+
+## 🔑 LLM API Key Configuration & Dual-Mode Fallback
+
+The platform uses a hosted LLM service for AI intelligence. You can configure your API key and rotate it at any time with zero downtime.
+
+### Step 1: Obtain a Free Key
+1. Visit your **Hosted LLM API Console**.
+2. Sign in with your developer account.
+3. Click **"Create API Key"** and copy your token.
+
+### Step 2: Configure in `.env`
+Edit or create your `.env` file in the project root:
+```ini
+# .env
+LLM_API_KEY=your_hosted_llm_api_key_here
+LLM_MODEL=your-model-name
+```
+
+### Step 3: Restart Backend
+```powershell
+uvicorn backend.main:app --reload
+```
+
+---
+
+### 🛡️ Dual-Mode Intelligence & Failover Mechanics
+> [!NOTE]
+> **What happens if your LLM API credit expires or the provider returns HTTP 429 Quota Exceeded?**
+>
+> The system implements a **fail-soft heuristic architecture** (`backend/services/llm_service.py`):
+> 1. If the API key is missing, expired, or rate-limited, the system **never crashes, never fails, and displays zero error alerts**.
+> 2. It immediately shifts to an internal **Deterministic Graph Heuristics Engine**:
+>    - Dynamically evaluates node degree centrality, PageRank, and betweenness scores.
+>    - Scans active pattern detections (Hawala, SIM swaps, co-locations).
+>    - Generates a structured, evidence-backed investigative briefing directly in the chat panel.
+> 3. Once a new valid key is provided in `.env`, the system automatically resumes utilizing the hosted LLM.
+
+---
+
+## 🕵️ The 10 Scoped Cypher Pattern Detectors
+
+Continuous, case-scoped graph algorithms engineered to identify suspicious patterns for human investigator verification:
+
+| # | Detector Name | Threat Level | Algorithmic Mechanism |
+| :-: | :--- | :-: | :--- |
+| **1** | **Frequent Caller Spikes** | <img src="https://img.shields.io/badge/HIGH-7928CA?style=flat-square" /> | Detects communication volume outliers (>30 calls) between unassociated nodes in short intervals. |
+| **2** | **Burner SIM / IMEI Multi-Swap** | <img src="https://img.shields.io/badge/CRITICAL-FF0055?style=flat-square" /> | Traces multiple phone numbers registered to or transmitting through identical physical IMEI hardware. |
+| **3** | **Hawala & Laundering Rings** | <img src="https://img.shields.io/badge/CRITICAL-FF0055?style=flat-square" /> | Detects rapid-succession funds transfers traversing 3+ intermediary accounts to obscure origin. |
+| **4** | **Mule Account Syndicates** | <img src="https://img.shields.io/badge/HIGH-7928CA?style=flat-square" /> | Flags historically dormant accounts suddenly receiving high-velocity, high-sum deposits. |
+| **5** | **Cross-Case Suspect Overlap** | <img src="https://img.shields.io/badge/CRITICAL-FF0055?style=flat-square" /> | Pinpoints identical person nodes, vehicles, or bank accounts present across separate FIRs. |
+| **6** | **Vehicle Convoy Tracking** | <img src="https://img.shields.io/badge/MEDIUM-F77F00?style=flat-square" /> | Identifies pairs or groups of vehicles logged at identical CCTV ANPR cameras within 5-minute margins. |
+| **7** | **Crime Scene Co-Location** | <img src="https://img.shields.io/badge/HIGH-7928CA?style=flat-square" /> | Matches cell tower sector connections of multiple suspects within the temporal window of an FIR. |
+| **8** | **Meeting & Association Clusters** | <img src="https://img.shields.io/badge/MEDIUM-F77F00?style=flat-square" /> | Calculates network clique density to discover co-accused meeting clusters. |
+| **9** | **Shell Company / Dummy Address Rings** | <img src="https://img.shields.io/badge/MEDIUM-F77F00?style=flat-square" /> | Detects multiple commercial legal entities registered to identical physical postal addresses. |
+| **10** | **Centrality Leaderboard** | <img src="https://img.shields.io/badge/ANALYTIC-00BBF9?style=flat-square" /> | Executes PageRank & Betweenness Centrality to isolate network commanders vs. logistics mules. |
+
+---
+
+## 📊 Graph Centrality: Revealing Structural Significance
+
+Relational SQL queries only count raw totals (e.g. *number of calls or transactions*). In real-world syndicates, core coordinators purposely keep low call volumes, relying on intermediaries.
+
+By calculating **Betweenness Centrality** and **PageRank**, the graph engine isolates entities that act as structural bridges between otherwise disconnected clusters.
+
+---
+
+## 🔒 Cryptographic Chain of Custody (Hash-Chained Ledger)
+
+To support legal admissibility standards (e.g., Section 65B of the Indian Evidence Act / BSA guidelines), the system implements a **local hash-chained evidence ledger**:
+
+- **Deterministic SHA-256 Merkle Roots**: All entities and relationships in an ingested payload are normalized and hashed into a Merkle root tree.
+- **Cryptographic Hash Chaining**: Every block contains the `previous_hash` of its predecessor. Altering a past record invalidates every subsequent block.
+- **Tamper Verification**: Call `GET /api/blockchain/verify` to validate ledger integrity anytime.
+
+---
+
+## 📋 What is Actually Implemented? (Prototype Scope & Roadmap)
+
+To maintain rigorous engineering integrity, here is the exact breakdown of implemented prototype components vs. production roadmap:
+
+| Capability | Status | Implementation Details |
+| :--- | :---: | :--- |
+| **Officer Authentication & RBAC** | 🟢 **Implemented** | Dynamic officer credentials (Badge ID, Name, Passcode, Clearance Level) with salted SHA-256 hashing. |
+| **Interactive Home Portal** | 🟢 **Implemented** | Modern landing interface with live KPI counters, animated feature breakdown, and quick officer auth. |
+| **Workflow Category Navigation** | 🟢 **Implemented** | 4 organized workspaces: Command Center, Network Studio, Intelligence Hub, and Evidence & Cases. |
+| **Evidence Document Studio** | 🟢 **Implemented** | In-app document viewer, built-in CSV table parser, document search, and officer case attribution. |
+| **Multi-Modal Graph Ingestion** | 🟢 **Implemented** | Normalizes FIRs, CDRs, Bank Wires, and CCTV ANPR into Neo4j property graph. |
+| **Specialized Subgraph Extraction** | 🟢 **Implemented** | Filter modes for CDR telecom, Person syndicate, and Financial money flows. |
+| **Call & Transaction Aggregation**| 🟢 **Implemented** | Parallel calls consolidated to `CALLED (nx)` and wires to `TRANSFERRED_TO (nx)`. |
+| **Node Explanation Tables** | 🟢 **Implemented** | Human-readable specification tables for IMEI, IFSC, VIN, carriers, and statistics. |
+| **Autonomous AI Subgraph Extraction**| 🟢 **Implemented** | Natural language intent recognition automatically switches canvas view modes. |
+| **Atomic ACID Transactions** | 🟢 **Implemented** | All graph writes wrapped in `with session.begin_transaction() as tx:` for rollback safety. |
+| **ID-First Identity Resolution**| 🟢 **Implemented** | ID-first resolution (`people_by_id`) preventing same-name suspect collisions. |
+| **Advanced Anti-Hallucination Engine**| 🟢 **Implemented** | 40+ token stop list + regex narrative cleaner stripping report headings from creating ghost Person nodes. |
+| **PDF Extraction Engine** | 🟢 **Implemented** | Integrated `pdfplumber` and `pypdf` with HTTP 422 handling for scanned/corrupt briefs. |
+| **10 Scoped Cypher Detectors** | 🟢 **Implemented** | Automated Cypher algorithms for Hawala, Burner SIMs, convoys, and co-locations. |
+| **Hosted LLM Copilot** | 🟢 **Implemented** | Natural language graph synthesis with inline markdown formatting. |
+| **Heuristic Fallback Engine** | 🟢 **Implemented** | Rule-based topology summarizer ensuring 100% offline uptime without API credits. |
+| **Hash-Chained Custody Ledger** | 🟢 **Implemented** | Dual-persisted SHA-256 Merkle root ledger (JSON + Neo4j Cloud `:Block` nodes). |
+| **Automated Test Suite** | 🟢 **Implemented** | 228 passing unit & integration tests running completely offline in ~2 seconds. |
+| **React 19 + TypeScript Frontend** | 🟢 **Implemented** | Fully typed `.tsx` codebase with `strict: true`, typed props/state/refs, and zero `any` leaks. Built with Vite 5. |
+| **Tailwind CSS Integration** | 🟢 **Implemented** | Utility-first CSS framework with custom Atlas design tokens, glassmorphism, and neomorphic components. |
+| **Interactive Web Dashboard** | 🟢 **Implemented** | Vis.js ForceAtlas2 network explorer with live physics oscillation and docked Copilot drawer. |
+| **Duplicate Case Upload Guard** | 🟢 **Implemented** | Pre-upload inspection and backend self-reporting popup modal for already-ingested cases. |
+| **Distributed Consensus** | 🔵 **Future Roadmap** | Multi-node Raft/PBFT consensus across separate agency jurisdictions. |
+| **Probabilistic Fuzzy NER** | 🔵 **Future Roadmap** | Legal NER fine-tuning for resolving fuzzy suspect name variants. |
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Version | Purpose |
+| :--- | :--- | :---: | :--- |
+| **Frontend Framework** | React | 19.x | Component-based SPA with hooks and strict mode |
+| **Type System** | TypeScript | 5.6 | `strict: true`, typed props/state/refs/events across all `.tsx` files |
+| **CSS Framework** | Tailwind CSS | 3.4 | Utility-first styling with custom Atlas design tokens |
+| **Bundler** | Vite | 5.x | Lightning-fast HMR and optimized production builds (`tsc && vite build`) |
+| **Graph Visualization** | Vis.js Network | 9.1 | ForceAtlas2-based interactive network canvas with live physics oscillation |
+| **Charts** | Chart.js | 4.4 | Bar and doughnut charts for ecosystem metrics |
+| **Backend** | FastAPI | 0.100+ | Async Python REST API with Pydantic v2 validation |
+| **Authentication** | Custom RBAC | SHA-256 | Official badge credentials, salted hash storage, clearance tiers |
+| **Graph Database** | Neo4j Aura | 5.27 | Cloud-hosted property graph with Cypher query engine |
+| **AI Copilot** | Hosted LLM | Cloud API | Natural language graph intelligence with heuristic fallback |
+| **PDF Extraction** | pdfplumber & pypdf | 0.10+ / 4.0+ | Forensic FIR text extraction from documents and briefs |
+| **Evidence Integrity** | SHA-256 | — | Dual-persisted hash-chained Merkle root ledger |
+| **Testing** | Pytest | 9.1 | 228 unit & integration tests, 100% offline execution |
+
+
+---
+
+## 🏛️ System Architecture Pipeline
+
+```mermaid
+flowchart TD
+    classDef ingestion fill:#00F5D4,stroke:#00A896,stroke-width:2px,color:#000;
+    classDef core fill:#1E293B,stroke:#3B82F6,stroke-width:2px,color:#fff;
+    classDef ai fill:#7928CA,stroke:#FF0080,stroke-width:2px,color:#fff;
+    classDef visual fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#fff;
+
+    subgraph INGEST ["📥 Multi-Source Evidence Ingestion"]
+        A1[📁 Case Payloads: FIR, CDR, CCTV, Bank]:::ingestion
+        A2[⚡ Live Streaming Events: /api/events]:::ingestion
+    end
+
+    subgraph BACKEND ["⚙️ Core Intelligence Backend (FastAPI + Neo4j)"]
+        B[Schema Mapper & Deduplication]:::core
+        C[(Neo4j Property Graph)]:::core
+        D[Cryptographic SHA-256 Merkle Service]:::core
+        E[Centrality Engine: PageRank & Betweenness]:::core
+        F[10 Scoped Suspicious Pattern Detectors]:::core
+        G[Ambiguity-Safe Pathfinding Service]:::core
+    end
+
+    subgraph COPILOT ["🤖 Intelligent Reasoning Layer"]
+        H[Hosted LLM Copilot]:::ai
+        I[Fail-Soft Graph Heuristic Engine]:::ai
+    end
+
+    subgraph UI ["🎨 Analyst Workspace (React 19 + TypeScript + Tailwind CSS)"]
+        J[Vis.js ForceAtlas2 Interactive Canvas]:::visual
+        K[Docked Copilot Chat & Quick Chips]:::visual
+        L[Suspicious Pattern Alerts & Threat Badges]:::visual
+        M[Blockchain Evidence Ledger Inspector]:::visual
+    end
+
+    A1 --> B
+    A2 --> B
+    B --> C
+    B --> D
+    C --> E
+    C --> F
+    C --> G
+    C --> H
+    E --> H
+    F --> H
+    H -.->|Quota / Offline Fallback| I
+    C --> J
+    H --> K
+    I --> K
+    F --> L
+    D --> M
+```
+
+---
+
+## 🧪 Comprehensive Verification Suite
+
+Run all 228 unit and integration tests completely offline:
+
+```powershell
+pytest tests/unit tests/integration
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1
+rootdir: C:\Users\shinc\projects\SIH-189-completed\SIH_189_V2
+collected 228 items
+
+tests\unit\test_ai_insights.py .....                                     [  2%]
+tests\unit\test_auth.py ..                                               [  3%]
+tests\unit\test_batched_relationship_writers.py .....................    [ 12%]
+tests\unit\test_blockchain_ledger.py ....                                [ 14%]
+tests\unit\test_case_delete.py ......                                    [ 16%]
+tests\unit\test_data_ingestion_pipeline_audit.py ........                [ 20%]
+tests\unit\test_delta_processor.py ................                      [ 27%]
+tests\unit\test_entity_search.py .....                                   [ 29%]
+tests\unit\test_event_model.py ...............                           [ 35%]
+tests\unit\test_insights_10_types.py ..........                          [ 40%]
+tests\unit\test_logging_masking.py ...                                   [ 41%]
+tests\unit\test_rankings.py ....                                         [ 43%]
+tests\unit\test_scoped_detectors.py .................................... [ 59%]
+......................                                                   [ 68%]
+tests\unit\test_shortest_path.py ......                                  [ 71%]
+tests\integration\test_case_identity_ingestion_audit.py ....             [ 73%]
+tests\integration\test_events_api.py .........................           [ 84%]
+tests\integration\test_freetext_person_ingestion_audit.py ...            [ 85%]
+tests\integration\test_health_and_reset.py ....                          [ 87%]
+tests\integration\test_ingest_merge.py ....                              [ 89%]
+tests\integration\test_ingest_ordering.py ......                         [ 91%]
+tests\integration\test_ingest_replace.py ..                              [ 92%]
+tests\integration\test_legacy_ingest_casedata.py ................        [ 99%]
+tests\integration\test_unified_ingest.py .                               [100%]
+
+====================== 228 passed in 2.25s =======================
+```
+
+---
+
+## 📂 Repository File Structure
+
+```
+AI-Powered-Criminal-Network-Analysis-System/
+├── README.md                           # ⭐ Main Showcase & System Overview
+├── .env.example                        # Safe environment template
+├── .gitignore                          # Strict security exclusion for secrets & caches
+├── docker-compose.yml                  # Neo4j + Backend container orchestration
+├── Dockerfile                          # Multi-stage production container build
+├── pytest.ini                          # Pytest configuration
+├── requirements.txt                    # Pinned production dependencies (FastAPI, Neo4j, GenAI, pdfplumber)
+├── start_system.bat                    # 🚀 1-Click launcher for Backend (8000) & Frontend (3000)
+├── run_backend.bat                     # 🚀 1-Click launcher for FastAPI backend
+├── run_frontend.bat                    # 🚀 1-Click launcher for Vite React frontend
+│
+├── frontend/                           # 🎨 React 19 + TypeScript + Tailwind CSS Application
+│   ├── index.html                      # SPA entry point (loads /src/main.tsx)
+│   ├── package.json                    # Dependencies & build scripts (tsc && vite build)
+│   ├── tsconfig.json                   # TypeScript strict configuration
+│   ├── tsconfig.node.json              # TypeScript config for Vite
+│   ├── tailwind.config.ts              # Tailwind CSS theme & design tokens
+│   ├── postcss.config.js               # PostCSS pipeline (Tailwind + Autoprefixer)
+│   ├── vite.config.ts                  # Vite 5 bundler configuration
+│   ├── src/
+│   │   ├── main.tsx                    # React 19 entry point
+│   │   ├── App.tsx                     # Root coordinator with 10 view routers & officer session state
+│   │   ├── index.css                   # Custom Atlas neomorphic styling & design tokens
+│   │   ├── vite-env.d.ts               # TypeScript module declarations
+│   │   ├── services/
+│   │   │   ├── api.ts                  # Typed API client, officer session & domain interfaces
+│   │   │   └── fileStore.ts            # Client-side document archive, CSV table parser & LocalCaseStore
+│   │   └── components/
+│   │       ├── AuthModule.tsx          # Dynamic officer registration & login modal
+│   │       ├── HomeModule.tsx          # Interactive forensic landing portal with live tickers & feature demo
+│   │       ├── Sidebar.tsx             # TopHeader navigation with 4 grouped workflow workspaces
+│   │       ├── OverviewModule.tsx      # Command Center with Chart.js analytics & health probe
+│   │       ├── GraphExplorerModule.tsx # Vis.js ForceAtlas2 canvas with live oscillation & high-contrast nodes
+│   │       ├── EntitySearchModule.tsx  # Multi-property entity search with 1-hop inspection
+│   │       ├── ShortestPathModule.tsx  # Ambiguity-safe Dijkstra pathfinding with candidate disambiguation
+│   │       ├── RankingsModule.tsx      # Centrality rankings (PageRank, Betweenness, Degree)
+│   │       ├── PatternInsightsModule.tsx # 10 forensic pattern detectors & KPI analytics
+│   │       ├── BlockchainModule.tsx    # SHA-256 chain of custody ledger & tamper audit
+│   │       ├── CaseRegistryModule.tsx  # Case management, in-app file viewer, CSV table visualizer & safe delete
+│   │       ├── DataIngestionModule.tsx # Multi-source upload (PDF/CSV/TXT) with officer attribution
+│   │       ├── EntityPropertiesTable.tsx # Detailed forensic node property specification table
+│   │       ├── FormattedAiMessage.tsx  # Rich markdown tokenizer & renderer for AI chat & insights
+│   │       └── Modals.tsx             # Entity 360, AI dossier & duplicate case alert modals
+│   ├── dist/                           # Production build output (served by FastAPI at root /)
+│   └── README.md                       # 👉 Detailed Frontend Guide
+│
+├── backend/                            # ⚙️ FastAPI Graph Intelligence Engine
+│   ├── main.py                         # Application entrypoint, auth router inclusion & dist mount
+│   ├── database.py                     # Neo4j driver connection pool with auto-reconnect
+│   ├── config.py                       # Settings & environment validation
+│   ├── logging_config.py               # Structured logging with PII masking
+│   ├── models/                         # Pydantic v2 schemas (case_input, entity, event, insights, etc.)
+│   ├── routers/                        # REST controllers (auth, cases, graph, ingest, insights, path, rankings, blockchain)
+│   │   ├── auth.py                     # Dynamic officer registration, login & user registry
+│   │   ├── cases.py                    # Case listing with officer filter, summary & safe cascading deletion
+│   │   ├── ingest.py                   # Multi-format ingestion with officer attribution
+│   │   └── ...                         # (graph, health, insights, path, rankings, blockchain)
+│   ├── services/                       # Intelligence engines & graph algorithms
+│   │   ├── auth_service.py             # Salted SHA-256 password hashing & officer session store
+│   │   ├── normalizer.py               # E.164 phone & account identifier normalization
+│   │   ├── evidence_store.py           # Granular CDR and transaction storage & retrieval
+│   │   ├── evidence_relationship_engine.py # Evidence-backed typed relationship derivation
+│   │   ├── llm_service.py              # Hosted LLM with autonomous subgraph intent extraction
+│   │   ├── graph_service.py            # Subgraph extraction, call/tx aggregation & Neo4j 5 safe deletion
+│   │   ├── graph_writes.py             # Parameterized Cypher writers with officer attribution
+│   │   ├── ingestion_engine.py         # Advanced anti-hallucination engine with clean_person_name
+│   │   ├── blockchain_service.py       # Cryptographic evidence ledger, Merkle roots, and chain verification
+│   │   ├── scoped_detectors.py         # Case-scoped Cypher queries for all 10 detectors
+│   │   ├── delta_processor.py          # Atomic incremental event batch processor with rollback safety
+│   │   ├── ranking_service.py          # Degree, Weighted Degree, Cross-Case, and GDS centrality algorithms
+│   │   └── path_service.py             # Shortest path traversal with case-insensitive name/alias resolution
+│   └── README.md                       # 👉 Detailed Backend Architecture Guide
+│
+├── dataset/                            # 📂 Forensic Case Evidence Payloads
+│   ├── case_001_homicide.json          # Multi-source homicide case (FIR, CDR, CCTV)
+│   ├── case_002_fraud.json             # Corporate fraud with cross-case overlap
+│   ├── envelope_sample.json            # Real-time streaming event envelope
+│   └── README.md                       # 👉 Forensic Dataset & Ingestion Guide
+│
+├── tests/                              # 🧪 Automated Test Suite (228 Passing Tests)
+│   ├── unit/                           # Isolated unit tests (includes test_auth.py)
+│   ├── integration/                    # API & pipeline integration tests
+│   ├── live/                           # Live Neo4j equivalence tests
+│   ├── conftest.py                     # Mock fixtures & blockchain test isolation
+│   └── README.md                       # 👉 Testing Suite Guide & Commands
+│
+├── data/                               # 🔒 Persistent Credential & Ledger Storage
+│   ├── users.json                      # Persistent officer credentials & clearance registry
+│   ├── blockchain_ledger.json          # Verifiable chain-of-custody blocks
+│   └── README.md                       # 👉 Blockchain & Tamper-Proofing Guide
+│
+└── docs/                               # 📑 Technical Specifications & Runbooks
+    ├── assets/                         # 🎨 Authentic UI Screenshots & Visual Assets
+    │   ├── v2_home_portal.png          # Forensic landing portal & live status
+    │   ├── v2_officer_auth.png         # Officer terminal authentication & RBAC
+    │   ├── v2_command_center.png       # Command Center overview & ecosystem metrics
+    │   └── v2_graph_copilot.png        # Network Studio canvas with docked AI Copilot
+    ├── EVENTS_API.md                   # Real-time event streaming specification
+    ├── SUMMARY.md                      # Comprehensive system architecture & entity model
+    ├── SYSTEM_ARCHITECTURE_AND_OPERATIONS_GUIDE.md # Production runbook & failover guide
+    └── README.md                       # 👉 Documentation Index & Roadmap
+```
+
+---
+
+## 🔄 Version 1.0 vs Version 2.0: Comprehensive Evolution Guide
+
+The platform has evolved from an initial technical prototype (**Version 1.0**) into a full-fledged enterprise investigative operating system (**Version 2.0**). Here is the complete side-by-side comparison:
+
+| Dimension | Version 1.0 (Baseline Prototype) | Version 2.0 (Enterprise Intelligence) |
+| :--- | :--- | :--- |
+| **Officer Access & Security** | Unauthenticated single-user mode | **Dynamic Multi-Officer RBAC** (`/api/auth/*`): Official Badge ID, salted SHA-256 passwords, department & clearance tiers |
+| **Case Ownership & Audit** | Anonymous global case registry | **Investigator Attribution**: Cases tracked by `uploaded_by` and `lead_investigator` with officer filtering |
+| **Home & Landing Experience** | Direct navigation to Command Center | **Interactive Home Portal (`HomeModule.tsx`)**: Hero showcase, live KPI counters, animated architecture walkthrough |
+| **Workspace Navigation** | Single static sidebar rail (9 flat tabs) | **4 Grouped Workflow Hubs (`TopHeader`)**: Command Center, Network Studio, Intelligence Hub, Evidence & Cases |
+| **Evidence Document Studio** | Ingestion-only file receiver | **In-App Document Studio**: Document search filter, built-in CSV table visualizer, and content preview modal |
+| **Client-Side File Storage** | Stateless upload transfer | **Persistent FileStore (`fileStore.ts`)**: Ingested files cached with size/content metadata & `LocalCaseStore` fallback |
+| **Anti-Hallucination Guard** | Basic `NON_PERSON_WORDS` stop list | **Deep Narrative Cleaner (`clean_person_name`)**: Strips report headings, stops 40+ narrative keywords, zero ghost nodes |
+| **Graph Topology & Clarity** | Small nodes (13–16px), 9px font | **High-Definition Network (`GraphExplorerModule`)**: 20–32px nodes, 11.5–15px font with white/dark halos, drop shadows |
+| **Graph Physics & Animation** | Auto-freeze after stabilization | **Continuous Live Physics**: Gentle to-and-fro oscillation for a living graph with toggleable pause/resume |
+| **Case Deletion Safety** | Legacy Cypher pattern expressions | **Neo4j 5+ `EXISTS { MATCH ... }` Subqueries**: Verified safe cascading deletion with automatic ledger pruning |
+| **Automated Verification** | 226 passing tests | **228 Passing Tests**: Added complete authentication, RBAC, and session test coverage (`test_auth.py`) |
+
+### Detailed Breakdown of Key Innovations in Version 2.0:
+
+#### 1. 🔐 Multi-Officer Authentication & Dynamic RBAC
+- **Official Credentialing**: Allows officers to register and authenticate using their Official Badge Number (e.g. `IND-LE-8402`), Officer Name, Security Passcode, Department, and Clearance Level.
+- **Cryptographic Security**: Passwords are never stored in plaintext; they are hashed using SHA-256 with a unique salt (`atlas_sec_salt_2026`) and stored in `data/users.json`.
+- **Officer Case Ownership**: Every case ingested or modified is stamped with the active investigator's identity (`uploaded_by`), enabling multi-detective task forces to collaborate while retaining complete chain-of-custody accountability.
+
+#### 2. 🏠 Interactive Forensic Home Portal (`HomeModule.tsx`)
+- Replaces the abrupt blank entry with a polished law enforcement operations portal.
+- Displays real-time operational tickers: Total Active Cases, FIR Filings, Monitored Suspects, Verified Blockchain Blocks, and Database Latency.
+- Features scroll-triggered floating reveal animations visually breaking down the end-to-end data pipeline (*Unstructured Evidence → Knowledge Graph → 10 Detectors → AI Copilot*).
+- Provides quick-launch action buttons for immediate access to the Command Center, Network Studio, or Officer Authentication.
+
+#### 3. 📑 Evidence Document Studio & In-App CSV Table Viewer (`CaseRegistryModule.tsx`, `fileStore.ts`)
+- **Direct Document Inspection**: Detectives can preview uploaded evidence files directly within the Case Registry interface without third-party software.
+- **In-App CSV Table Visualizer**: Automatically parses raw telecom CDR logs and bank transaction CSVs into clean, interactive, sortable data tables.
+- **Evidence Search Filter**: Search attached police briefs, interrogation memos, and surveillance logs by filename or narrative content.
+- **Persistent Client Storage**: File metadata, byte sizes, and content payloads are archived via `FileStore`, with `LocalCaseStore` providing client-side fallback speed.
+
+#### 4. 🛡️ Advanced Anti-Hallucination Sanitization Engine (`ingestion_engine.py`)
+- In Version 1.0, procedural narrative headings in police FIRs (e.g. *"Persons identified during initial inquiry"*) could occasionally trigger false Person node creation.
+- Version 2.0 introduces `clean_person_name()`: an intelligent regex cleaner that strips administrative prefixes and report headings before graph writes.
+- Expanded the `NON_PERSON_WORDS` stop list with over 40 investigative keywords and implemented a `narrative_keywords` filter blocking free-text transaction summaries from forming ghost nodes.
+
+#### 5. 🎨 Streamlined 4-Hub Workflow Navigation (`Sidebar.tsx`)
+- Replaces the 9-item flat sidebar with a clean, top-tier workflow navigation bar grouped into 4 functional domains:
+  - 🚀 **Command Center**: High-level ecosystem KPI dashboard, threat distribution charts, and real-time database health probe.
+  - 🕸️ **Network Studio**: Vis.js interactive graph explorer with live physics oscillation and ambiguity-safe Dijkstra shortest pathfinder.
+  - 🧠 **Intelligence Hub**: 360° entity search, mathematical centrality rankings (PageRank, Betweenness), and 10 automated Cypher pattern detectors.
+  - 📁 **Evidence & Cases**: Case Registry with embedded document viewer, multi-format file ingestion, and immutable SHA-256 blockchain ledger.
+- Features an active Officer Profile pill with badge number, clearance level, and one-click session logout.
+
+#### 6. 🕸️ High-Contrast Graph Visualizer with Live Physics (`GraphExplorerModule.tsx`)
+- Upgraded node sizes from tiny 13–16px specks to prominent **20–32px** circles with distinct color coding across all 13 entity types.
+- Enlarged typography to **11.5–15px** and added high-contrast text stroke halos (`#ffffff` / `#0f172a`), guaranteeing 100% legibility against any background.
+- Added subtle drop shadows for depth and scaled directional arrows to **0.6** for immediate relationship comprehension.
+- Tuned continuous live physics oscillation with gentle forces to give the network an organic, responsive feel with toggleable toolbar controls.
+
+#### 7. 🧪 Expanded 228-Test Verification Suite
+- Introduced `tests/unit/test_auth.py` verifying officer registration, authentication, invalid password handling, duplicate badge guards, and REST user endpoints.
+- Total test count expanded to **228 automated tests**, all running 100% offline in ~2.25 seconds.
+
+---
+
+<div align="center">
+
+<p align="center">
+  <b>Built for the Smart India Hackathon (SIH) &bull; National Law Enforcement Innovation</b><br/>
+  <i>Empowering investigators with Graph AI, Cryptographic Integrity, and Explainable Reasoning.</i>
+</p>
+
+</div>

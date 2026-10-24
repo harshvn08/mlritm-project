@@ -1,0 +1,198 @@
+import React, { useEffect, useRef, useMemo } from 'react';
+import Chart from 'chart.js/auto';
+import { API, esc, Case, Insight, HealthStatus } from '../services/api';
+
+export interface OverviewModuleProps {
+  cases: Case[];
+  health: HealthStatus | null;
+  insights: Insight[];
+  setInsights: (insights: Insight[]) => void;
+  changeView: (view: string) => void;
+  openAiDossier: (caseId: string, caseName: string) => void;
+}
+
+export function OverviewModule({ cases, health, insights, setInsights, changeView, openAiDossier }: OverviewModuleProps) {
+  const theme = document.documentElement.getAttribute('data-theme') || 'light';
+  const chartRef1 = useRef<HTMLCanvasElement>(null);
+  const chartRef2 = useRef<HTMLCanvasElement>(null);
+  const chartInstance1 = useRef<Chart | null>(null);
+  const chartInstance2 = useRef<Chart | null>(null);
+
+  const openCasesCount = useMemo(() => cases.filter(x => String(x.status || 'OPEN').toUpperCase() !== 'CLOSED').length, [cases]);
+  const totalEntities = useMemo(() => cases.reduce((s, x) => s + (x.total_entities || 0), 0), [cases]);
+  const critInsights = useMemo(() => (insights || []).filter(i => (i.severity || '').toUpperCase() === 'CRITICAL').length, [insights]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      if (!insights.length && cases.length) {
+        try {
+          const topCases = cases.slice(0, 4);
+          const res = await Promise.all(topCases.map(c => API.get<Insight[]>(`/api/cases/${encodeURIComponent(c.case_id)}/insights`).catch(() => [] as Insight[])));
+          if (isMounted) setInsights(res.flat());
+        } catch (e) {}
+      }
+      try {
+        const g = await API.get<{ nodes?: Array<{ labels?: string[] }> }>('/api/graph?limit=500');
+        if (!isMounted) return;
+        const counts: Record<string, number> = {};
+        (g.nodes || []).forEach(n => {
+          const l = n.labels?.[0] || 'Entity';
+          counts[l] = (counts[l] || 0) + 1;
+        });
+        if (chartRef1.current) {
+          if (chartInstance1.current) chartInstance1.current.destroy();
+          chartInstance1.current = new Chart(chartRef1.current, {
+            type: 'bar',
+            data: {
+              labels: Object.keys(counts),
+              datasets: [{
+                data: Object.values(counts),
+                backgroundColor: theme === 'dark'
+                  ? ['#C8203B', '#E7B94F', '#2788E8', '#00B887', '#8739D0', '#73818D']
+                  : ['#333333', '#706c61', '#8c887e', '#a8a59d', '#555555', '#444444'],
+                borderRadius: 6, barPercentage: 0.6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { ticks: { color: theme === 'dark' ? '#A5B0BA' : '#706c61', font: { family: 'Inter', size: 11, weight: 'bold' } }, grid: { display: false } },
+                y: { ticks: { color: theme === 'dark' ? '#A5B0BA' : '#706c61', font: { family: 'Inter', size: 11 } }, grid: { color: theme === 'dark' ? 'rgba(165, 176, 186, 0.12)' : 'rgba(112, 108, 97, 0.12)' } }
+              }
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+      if (chartInstance1.current) {
+        chartInstance1.current.destroy();
+        chartInstance1.current = null;
+      }
+    };
+  }, [cases, insights.length, setInsights, theme]);
+
+  useEffect(() => {
+    const sev: Record<string, number> = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+    (insights || []).forEach(i => {
+      const s = (i.severity || '').toUpperCase();
+      if (sev[s] !== undefined) sev[s]++;
+    });
+    if (chartRef2.current) {
+      if (chartInstance2.current) chartInstance2.current.destroy();
+      chartInstance2.current = new Chart(chartRef2.current, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(sev),
+          datasets: [{
+            data: Object.values(sev),
+            backgroundColor: theme === 'dark' ? ['#C8203B', '#E7B94F', '#2788E8', '#00B887'] : ['#dc2626', '#f59e0b', '#0284c7', '#10b981']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: theme === 'dark' ? '#A5B0BA' : '#334155', font: { family: 'Inter', size: 12, weight: 'bold' } }
+            }
+          }
+        }
+      });
+    }
+    return () => {
+      if (chartInstance2.current) {
+        chartInstance2.current.destroy();
+        chartInstance2.current = null;
+      }
+    };
+  }, [insights, theme]);
+
+  const isHealthy = health?.status === 'healthy';
+
+  return (
+    <div>
+      <div className="cards-grid grid gap-4">
+        <div className="stat-card" style={{'--glow': 'rgba(0, 210, 255, 0.28)'} as React.CSSProperties}>
+          <div className="stat-label">Cases in Database</div>
+          <div className="stat-value">{cases.length}</div>
+          <div className="stat-foot"><small>{openCasesCount} active / open</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': 'rgba(99, 102, 241, 0.25)'} as React.CSSProperties}>
+          <div className="stat-label">Total Entities</div>
+          <div className="stat-value">{totalEntities.toLocaleString()}</div>
+          <div className="stat-foot"><small>indexed in graph</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': 'rgba(245, 158, 11, 0.25)'} as React.CSSProperties}>
+          <div className="stat-label">Forensic Insights</div>
+          <div className="stat-value">{insights.length}</div>
+          <div className="stat-foot"><small>{critInsights} critical threats</small></div>
+        </div>
+        <div className="stat-card" style={{'--glow': isHealthy ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'} as React.CSSProperties}>
+          <div className="stat-label">Database State</div>
+          <div className="stat-value" style={{fontSize: '22px'}}>{isHealthy ? 'Connected' : 'Offline'}</div>
+          <div className="stat-foot">
+            {isHealthy ? <small>Neo4j {health?.version || 'Cluster'} · {Math.round(health?.latency_ms || 0)}ms</small> : <small>Reconnecting to database…</small>}
+          </div>
+        </div>
+      </div>
+
+      <div className="cards-grid grid gap-4" style={{gridTemplateColumns: '2fr 1fr'}}>
+        <div className="card">
+          <div className="card-header flex items-center justify-between"><div className="card-title font-semibold">Entity Distribution by Type</div></div>
+          <div style={{position:'relative', height:'270px'}}><canvas ref={chartRef1}></canvas></div>
+        </div>
+        <div className="card">
+          <div className="card-header flex items-center justify-between"><div className="card-title font-semibold">Threat Severity Mix</div></div>
+          <div style={{position:'relative', height:'270px'}}><canvas ref={chartRef2}></canvas></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <div className="card-title font-semibold">Active Investigations</div>
+            <div style={{fontSize:'12px', color:'var(--text-faint)', marginTop:'2px'}}>Direct live stream from connected Neo4j knowledge graph</div>
+          </div>
+          <button className="neu-btn ghost transition hover:opacity-90" onClick={() => changeView('cases')}>View all cases →</button>
+        </div>
+        {!cases.length ? (
+          <div className="empty">
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            No cases registered yet. <a href="#" onClick={(e: React.MouseEvent<HTMLAnchorElement>) => { e.preventDefault(); changeView('cases'); }}>Register case data to get started →</a>
+          </div>
+        ) : (
+          <div className="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Case Name / ID</th><th>Type</th><th>Entities</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                {cases.slice(0, 6).map(x => (
+                  <tr key={x.case_id} style={{cursor:'pointer'}} onClick={() => changeView('cases')}>
+                    <td>
+                      <div className="font-bold" style={{fontWeight:700, color:'var(--text)'}}>{esc(x.case_name || x.case_id)}</div>
+                      <div className="mono text-xs" style={{color:'var(--text-faint)'}}>{esc(x.case_id)}</div>
+                    </td>
+                    <td>{esc(x.case_type || '—')}</td>
+                    <td className="mono">{x.total_entities}</td>
+                    <td><span className={`tag ${(x.status || 'open').toLowerCase().includes('close') ? 'closed' : 'open'}`}>{esc(x.status || 'OPEN')}</span></td>
+                    <td style={{textAlign:'right'}}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6"/></svg>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

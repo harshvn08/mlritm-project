@@ -1,0 +1,23 @@
+# Never put local credentials or investigation data in a public image.
+.env
+.env.*
+!.env.example
+data/
+dataset/
+
+# Developer/test artifacts and frontend build products (built in Docker).
+.git/
+.venv/
+venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+tests/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+*.log
+coverage/
+htmlcov/

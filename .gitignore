@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+.env.backup
+.env.local
+!.env.example
+*.log
+.venv/
+venv/
+env/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+node_modules/
+
+# Allow compiled React frontend dist for Render deployment
+!frontend/dist/
+
+# Nested reference folders
+SIH-189-completed/
+friend-made-changes/
+
+# Local-first database and uploaded evidence
+data/atlas_local.sqlite3*
+data/uploads/
+
+# Runtime authentication and evidence ledger files may contain private data.
+data/users.json
+data/blockchain_ledger.json
+data/*.sqlite3*
