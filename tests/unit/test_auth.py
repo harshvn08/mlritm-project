@@ -49,6 +49,14 @@ def test_production_auth_storage_does_not_seed_public_demo_credentials(monkeypat
     assert storage_path.read_text(encoding="utf-8") == "[]"
 
 
+def test_vercel_auth_storage_does_not_seed_local_demo_credentials(monkeypatch, tmp_path):
+    monkeypatch.delenv("APP_ENV", raising=False)
+    monkeypatch.setenv("VERCEL", "1")
+    storage_path = tmp_path / "vercel_users.json"
+    AuthService(storage_path=str(storage_path))
+    assert storage_path.read_text(encoding="utf-8") == "[]"
+
+
 import uuid
 
 def test_auth_router_api(monkeypatch, tmp_path):

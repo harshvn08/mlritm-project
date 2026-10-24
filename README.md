@@ -34,7 +34,7 @@
 
 Run `start.bat` from the project root. It checks for Python and Node.js, creates `.venv`, installs requirements and frontend dependencies, initializes a persistent SQLite database at `data/atlas_local.sqlite3`, then opens backend and frontend terminals. Open <http://localhost:3000>. No Neo4j instance, cloud database, API key, or `.env` setup is required for local case ingestion. Source documents and extracted graph data remain in the local `data/` folder. Optional Gemini and Neo4j integrations remain available only when separately configured; SQLite is the default storage backend.
 
-For a public, persistent single-service deployment, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For a Vercel deployment and its storage limitations, see [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md). The existing Render instructions remain in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 Extraction uses the existing deterministic offline parsers; optional local entity patterns recognize labeled metadata, emails, IPs, and phone numbers. Extraction is limited by source formatting. Displayed associations cite their source and are candidates for human verification, not allegations.
 

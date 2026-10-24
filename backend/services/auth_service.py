@@ -5,9 +5,10 @@ import time
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from backend.logging_config import logger
+from backend.storage_paths import default_data_dir
 
 USERS_FILE_PATH = os.environ.get("USERS_FILE_PATH") or str(
-    Path(os.environ.get("ATLAS_DATA_DIR", Path(__file__).resolve().parents[2] / "data")) / "users.json"
+    default_data_dir() / "users.json"
 )
 
 def _hash_password(password: str) -> str:
@@ -28,7 +29,8 @@ class AuthService:
             # Never provision the predictable local-demo account on a public
             # production instance. The existing registration screen creates
             # the first officer account on the persistent data volume.
-            if os.environ.get("APP_ENV", "development").lower() == "production":
+            if (os.environ.get("APP_ENV", "development").lower() == "production"
+                    or os.environ.get("VERCEL") == "1"):
                 self._save_users([])
                 return
             default_users = [

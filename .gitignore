@@ -17,6 +17,7 @@ dist/
 build/
 .mypy_cache/
 node_modules/
+.vercel/
 
 # Allow compiled React frontend dist for Render deployment
 !frontend/dist/
@@ -33,3 +34,5 @@ data/uploads/
 data/users.json
 data/blockchain_ledger.json
 data/*.sqlite3*
+data/*
+!data/README.md

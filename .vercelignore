@@ -1,0 +1,23 @@
+# Exclude secrets and local investigation data from all Vercel services.
+.env
+.env.*
+**/.env
+**/.env.*
+data/**
+dataset/**
+tests/**
+**/*.sqlite
+**/*.sqlite3*
+**/*.db
+
+# Build and developer artifacts; Vite creates its own dist during deployment.
+.venv/**
+venv/**
+node_modules/**
+frontend/node_modules/**
+frontend/dist/**
+**/__pycache__/**
+**/*.py[cod]
+.pytest_cache/**
+.git/**
+.vercel/**

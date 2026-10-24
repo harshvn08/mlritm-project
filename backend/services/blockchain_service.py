@@ -6,9 +6,10 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from neo4j import Session
 from backend.logging_config import logger
+from backend.storage_paths import default_data_dir
 
 LEDGER_FILE_PATH = os.environ.get("BLOCKCHAIN_LEDGER_PATH") or str(
-    Path(os.environ.get("ATLAS_DATA_DIR", Path(__file__).resolve().parents[2] / "data")) / "blockchain_ledger.json"
+    default_data_dir() / "blockchain_ledger.json"
 )
 
 

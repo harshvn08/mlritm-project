@@ -8,11 +8,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     APP_NAME: str = "Case-Graph-Intelligence-Backend"
-    APP_ENV: str = "development"
+    APP_ENV: str = "production" if os.getenv("VERCEL") == "1" else "development"
     APP_HOST: str = "127.0.0.1"
     APP_PORT: int = 8000
     LOG_LEVEL: str = "INFO"
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("VERCEL") != "1"
 
     # Local-first default: no server credentials or .env file are required.
     STORAGE_BACKEND: str = Field(default="sqlite")

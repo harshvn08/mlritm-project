@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any
 import networkx as nx
 import re
+from backend.storage_paths import default_data_dir
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = Path(os.environ.get("ATLAS_DATA_DIR", ROOT / "data"))
+DATA_DIR = default_data_dir()
 DB_PATH = Path(os.environ.get("ATLAS_SQLITE_PATH", os.environ.get("SQLITE_PATH", DATA_DIR / "atlas_local.sqlite3")))
 UPLOAD_DIR = Path(os.environ.get("ATLAS_UPLOAD_DIR", DATA_DIR / "uploads"))
 
