@@ -18,7 +18,7 @@ def _handle_rankings(
     limit: int,
     case_id: Optional[str]
 ) -> RankingsResponse:
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         return local_store.rank(metric, label, limit, case_id)
     try:
         with db.get_session() as session:

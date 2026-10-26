@@ -21,7 +21,7 @@ def get_graph(
     focus_entity_id: Optional[str] = Query(None, description="Return a one- or two-hop neighborhood"),
     hops: int = Query(1, ge=1, le=2)
 ):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         result = local_store.graph_data(case_id, limit=None if focus_entity_id else limit, focus_entity_id=focus_entity_id, hops=hops)
         if node_labels:
             result["nodes"] = [n for n in result["nodes"] if any(label in n["labels"] for label in node_labels)]
@@ -69,7 +69,7 @@ def search_entities(
     case_id: Optional[str] = Query(None, description="Optional case ID filter"),
     limit: int = Query(25, ge=1, le=100, description="Max search results")
 ):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         return local_store.search(q, entity_type, case_id, limit)
     try:
         with db.get_session() as session:
@@ -86,7 +86,7 @@ def search_entities(
 
 @router.get("/api/entities/{entity_id}", summary="Entity 360 Profile & 1-Hop Neighbors")
 def get_entity(entity_id: str):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         entity = local_store.entity_detail(entity_id)
         if not entity: raise HTTPException(status_code=404, detail=f"Entity '{entity_id}' not found.")
         return entity
@@ -105,7 +105,7 @@ def get_entity(entity_id: str):
 
 @router.get("/api/relationships/{relationship_id}", summary="Get Relationship Details")
 def get_relationship(relationship_id: str):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         relationship = local_store.relationship_detail(relationship_id)
         if not relationship: raise HTTPException(status_code=404, detail=f"Relationship '{relationship_id}' not found.")
         return relationship

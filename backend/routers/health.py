@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api", tags=["Health & System"])
 
 @router.get("/health", summary="Health Check & Neo4j Connectivity")
 def health_check():
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         return local_health()
     health = db.check_health()
     if health["status"] != "healthy":
@@ -22,7 +22,7 @@ def health_check():
 
 @router.head("/health", include_in_schema=False)
 def health_check_head():
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         local_health()
         return Response(status_code=status.HTTP_200_OK)
     health = db.check_health()

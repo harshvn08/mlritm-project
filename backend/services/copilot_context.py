@@ -38,7 +38,7 @@ def build_copilot_context(case_id, officer, question, selected_node_id=None):
     result = {"scope": "selected_case" if case_id else "authorized_cases", "cases": [], "limits": {
         "cases": MAX_CASES, "entities_per_case": MAX_NODES, "relationships_per_case": MAX_EDGES,
         "documents_per_case": MAX_DOCUMENTS, "note": "Context is a bounded excerpt, not the full evidence archive."}}
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         if case_id:
             from backend.case_access import require_case
             require_case(case_id)

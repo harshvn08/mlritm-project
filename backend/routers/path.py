@@ -20,7 +20,7 @@ def _handle_shortest_path(
     victim_id: Optional[str],
     max_depth: int
 ) -> Union[ShortestPathResponse, AmbiguousPathResponse]:
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         graph_data=local_store.graph_data()
         by_id={n["id"]:n for n in graph_data["nodes"]}
         graph=nx.Graph()

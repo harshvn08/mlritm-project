@@ -32,8 +32,13 @@ from backend.routers import (
 async def lifespan(app: FastAPI):
     # Application Startup
     logger.info(f"Starting {settings.APP_NAME} in '{settings.APP_ENV}' mode...")
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
-        initialize_local_store()
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
+        try:
+            initialize_local_store()
+        except Exception:
+            if settings.STORAGE_BACKEND.lower() != "postgres":
+                raise
+            logger.warning("Persistent database initialization failed; data requests will return 503 until storage is available.")
     else:
         try:
             # Initialize schema constraints and indexes
@@ -47,7 +52,7 @@ async def lifespan(app: FastAPI):
 
     # Application Shutdown
     logger.info("Shutting down application and closing Neo4j connections...")
-    if settings.STORAGE_BACKEND.lower() != "sqlite":
+    if settings.STORAGE_BACKEND.lower() not in {"sqlite", "postgres"}:
         db.close()
 
 
@@ -66,10 +71,13 @@ async def case_session_context(request: Request, call_next):
     from backend.case_access import current_officer, resolve_session, require_case
     from fastapi import HTTPException
     from urllib.parse import unquote
-    if settings.STORAGE_BACKEND.lower() != "sqlite":
+    if settings.STORAGE_BACKEND.lower() not in {"sqlite", "postgres"}:
         return await call_next(request)
     authorization = request.headers.get("authorization", "")
-    badge = resolve_session(authorization[7:]) if authorization.startswith("Bearer ") else None
+    try:
+        badge = resolve_session(authorization[7:]) if authorization.startswith("Bearer ") else None
+    except HTTPException as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     if settings.APP_ENV.lower() == "production" and request.url.path.startswith("/api/") and not request.url.path.startswith("/api/auth/") and request.url.path != "/api/health" and not badge:
         return JSONResponse(status_code=401, content={"detail": "Sign in to access case evidence."})
     context = current_officer.set(badge)

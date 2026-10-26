@@ -41,6 +41,8 @@ def signup(payload: SignUpRequest) -> Dict[str, Any]:
             "message": f"Officer '{payload.officerName}' registered successfully.",
             "session": session
         }
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -69,6 +71,8 @@ def login(payload: LoginRequest) -> Dict[str, Any]:
             "message": "Authentication successful.",
             "session": session
         }
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

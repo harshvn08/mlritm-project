@@ -4,6 +4,7 @@ import json
 import csv
 import re
 import os
+import uuid
 from typing import List, Optional, Tuple, Dict, Any, Union
 from fastapi import APIRouter, File, UploadFile, HTTPException, Header, Query, Body, status, Response, Form
 from pydantic import ValidationError
@@ -24,6 +25,23 @@ MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
 # (case_data, dataset_id, dataset_version): exactly what IngestionService.ingest_case needs.
 CaseDocument = Tuple[CaseData, str, str]
+
+
+def persist_relational_payload(case_data, response, mode="merge", source=None):
+    """Keep JSON/text endpoints on the selected persistent evidence backend too."""
+    from backend.case_access import current_officer, require_case
+    if mode != "merge":
+        raise HTTPException(409, "Evidence-preserving ingestion supports merge. Existing uploaded evidence will not be replaced.")
+    if not _case_data_has_evidence(case_data):
+        raise HTTPException(422, "No supported entities or source relationships were extracted.")
+    cid = case_data.case_metadata.case_id
+    require_case(cid)
+    text = case_data.model_dump_json()
+    source = source or ("case_payload.json", text.encode(), text)
+    counts, saved = local_ingest(cid, case_data.case_metadata.case_name or cid, case_data, [source], current_officer.get())
+    response.status_code = 201
+    return IngestResponse(case_id=cid, dataset_id="PERSISTED", dataset_version="1.0",
+        created=IngestCreatedCounts(**counts), converted_case_data=CaseData.model_validate(saved))
 
 
 def _has_extractable_content(engine: CaseIngestionEngine) -> bool:
@@ -267,13 +285,16 @@ async def ingest_files(
     if not upload_files:
         raise HTTPException(status_code=400, detail="No files uploaded.")
     if settings.STORAGE_BACKEND.lower() == "sqlite" and os.environ.get("VERCEL") == "1":
-        raise HTTPException(status_code=503, detail="Case ingestion requires persistent shared storage. Vercel's temporary SQLite files are isolated between instances and cannot retain cases reliably. Run the SQLite backend on a persistent volume or configure the existing Neo4j backend.")
-    if existing_case and settings.STORAGE_BACKEND.lower() == "sqlite":
+        raise HTTPException(status_code=503, detail="Case ingestion requires persistent shared storage. Configure STORAGE_BACKEND=postgres and server DATABASE_URL for shared PostgreSQL storage. Vercel's temporary SQLite files cannot retain evidence reliably.")
+    if existing_case and settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         from backend.local_store import case_detail
         if not case_id or case_detail(case_id) is None:
             raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found. Evidence was not uploaded.")
 
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if not case_id and settings.STORAGE_BACKEND.lower() == "postgres":
+        case_id = "CASE_" + uuid.uuid4().hex.upper()
+
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         from backend.case_access import current_officer
         badge = current_officer.get()
         if uploaded_by and not badge:
@@ -283,8 +304,8 @@ async def ingest_files(
 
     active_key = x_api_key or api_key
     # Local mode deliberately uses deterministic offline extraction, never an external LLM.
-    engine = CaseIngestionEngine(api_key=None if settings.STORAGE_BACKEND.lower() == "sqlite" else active_key)
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    engine = CaseIngestionEngine(api_key=None if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"} else active_key)
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         engine.api_key = None
     if case_id:
         engine.case_metadata.case_id = case_id
@@ -350,7 +371,7 @@ async def ingest_files(
             legacy_files += 1
 
     if legacy_files:
-        local_identifiers = settings.STORAGE_BACKEND.lower() == "sqlite" and any(re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.I) for _, _, text in local_documents)
+        local_identifiers = settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"} and any(re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.I) for _, _, text in local_documents)
         if not _has_extractable_content(engine) and not register_documents_present(local_documents) and not local_identifiers:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -368,7 +389,7 @@ async def ingest_files(
             graph_case_data.case_metadata.lead_investigator = officer_name
         documents.append((graph_case_data, "DS-DEFAULT", "1.0"))
 
-    if not documents and settings.STORAGE_BACKEND.lower() == "sqlite" and register_documents_present(local_documents):
+    if not documents and settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"} and register_documents_present(local_documents):
         if not case_id:
             case_id = "CASE_" + hashlib.sha256((case_title or "case" + str(len(local_documents))).encode()).hexdigest()[:12].upper()
         title = case_title.strip() if case_title and case_title.strip() else f"Case {case_id}"
@@ -380,7 +401,7 @@ async def ingest_files(
 
 
 
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         if not case_id:
             case_id = "CASE_" + hashlib.sha256((case_title or "case" + str(len(local_documents))).encode()).hexdigest()[:12].upper()
         title = case_title.strip() if case_title and case_title.strip() else engine.case_metadata.case_name or f"Case {case_id}"
@@ -480,6 +501,9 @@ def ingest_case_json(
             detail="Missing required 'case_metadata.case_id' in ingestion payload.",
         )
 
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        return persist_relational_payload(case_data, response, mode)
+
     try:
         with db.get_session() as session:
             ingest_result = IngestionService.ingest_case(
@@ -515,10 +539,16 @@ async def ingest_text(
 
     active_key = x_api_key or api_key
     engine = CaseIngestionEngine(api_key=active_key)
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        engine.api_key = None
+        engine.case_metadata.case_id = "CASE_" + uuid.uuid4().hex.upper()
     engine.parse_file("input_payload.txt", payload)
 
     consolidated_case = engine.consolidate()
     graph_case_data = map_ingestion_to_graph_data(consolidated_case.model_dump())
+
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        return persist_relational_payload(graph_case_data, response, source=("input_payload.txt", payload.encode(), payload))
 
     try:
         with db.get_session() as session:

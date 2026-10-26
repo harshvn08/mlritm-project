@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("VERCEL") != "1"
 
     # Local-first default: no server credentials or .env file are required.
-    STORAGE_BACKEND: str = Field(default="sqlite")
+    STORAGE_BACKEND: Literal["sqlite", "postgres", "neo4j"] = Field(default="sqlite")
+    DATABASE_URL: Optional[str] = Field(default=None, repr=False)
     SQLITE_PATH: Optional[str] = Field(default=None)
     # Comma-separated exact browser origins for separately hosted frontends.
     CORS_ORIGINS: Optional[str] = Field(default=None)

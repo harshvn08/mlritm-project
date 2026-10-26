@@ -18,7 +18,7 @@ def get_case_insights(
     severity: Optional[str] = Query(None, description="Filter by severity: CRITICAL, HIGH, MEDIUM, LOW"),
     insight_type: Optional[str] = Query(None, alias="type", description="Filter by insight type")
 ):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         if not local_store.case_detail(case_id):
             raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")
         rows=local_store.insights(case_id)
@@ -69,7 +69,7 @@ def get_delta_insights(
 @router.get("/api/cases/{case_id}/ai-insights", summary="Generate AI Case Insights with Gemini")
 @router.post("/api/cases/{case_id}/ai-insights", summary="Generate AI Case Insights with Gemini")
 def get_case_ai_insights(case_id: str):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         dossier = local_store.local_dossier(case_id)
         if not dossier:
             raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")

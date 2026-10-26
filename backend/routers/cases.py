@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/cases", tags=["Cases & Ingestion"])
 
 @router.post("/{case_id}/reprocess", summary="Reprocess preserved evidence for this case")
 def reprocess_case(case_id: str):
-    if settings.STORAGE_BACKEND.lower() != "sqlite":
+    if settings.STORAGE_BACKEND.lower() not in {"sqlite", "postgres"}:
         raise HTTPException(status_code=501, detail="Stored-file reprocessing is supported by the SQLite evidence store.")
     try:
         result = local_store.reprocess_case(case_id)
@@ -29,7 +29,7 @@ def reprocess_case(case_id: str):
 
 @router.get("/{case_id}/report", summary="Export actual case evidence and analysis")
 def case_report(case_id: str):
-    if settings.STORAGE_BACKEND.lower() != "sqlite":
+    if settings.STORAGE_BACKEND.lower() not in {"sqlite", "postgres"}:
         raise HTTPException(status_code=501, detail="This report endpoint requires the SQLite evidence store.")
     case = local_store.case_detail(case_id)
     if case is None:
@@ -65,6 +65,10 @@ def ingest_case(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Missing required 'case_metadata.case_id' in ingestion payload."
             )
+
+        if settings.STORAGE_BACKEND.lower() == "postgres":
+            from backend.routers.ingest import persist_relational_payload
+            return persist_relational_payload(case_data, response, mode)
 
         with db.get_session() as session:
             ingest_result = IngestionService.ingest_case(
@@ -119,7 +123,7 @@ def list_cases(
     limit: int = Query(50, ge=1, le=200, description="Max cases to return"),
     offset: int = Query(0, ge=0, description="Pagination offset")
 ):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         return local_store.list_cases(limit, offset, status_filter, uploaded_by)
     try:
         with db.get_session() as session:
@@ -138,7 +142,7 @@ def list_cases(
 
 @router.get("/{case_id}", summary="Get Case Summary & Entity Statistics")
 def get_case(case_id: str):
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         info = local_store.case_detail(case_id)
         if not info:
             raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")
@@ -206,7 +210,7 @@ def delete_case(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Case deletion aborted. Set 'confirm=true' to delete this case and its exclusive entities."
         )
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         result = local_store.delete_case(clean_case_id)
         if result is None:
             raise HTTPException(status_code=404, detail=f"Case with ID '{case_id}' not found.")
@@ -235,7 +239,7 @@ def delete_case(
 @router.get("/{case_id}/ai-dossier", summary="Generate AI Executive Case Dossier")
 def get_case_ai_dossier(case_id: str):
     """Generates an executive case dossier using Gemini AI or graph heuristic fallback."""
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
+    if settings.STORAGE_BACKEND.lower() in {"sqlite", "postgres"}:
         dossier = local_store.local_dossier(case_id)
         if not dossier:
             raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")

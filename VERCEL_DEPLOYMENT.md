@@ -83,3 +83,11 @@ a server-issued bearer session. Owned cases enforce officer access, and Gemini
 chat requires authentication in every environment. Login sessions still depend
 on the configured storage; temporary SQLite sessions cannot be shared reliably
 between Vercel function instances.
+
+## Persistent case ingestion
+
+Vercel deployments must use shared storage for evidence. Set `STORAGE_BACKEND=postgres`
+and the private server `DATABASE_URL`; retain `APP_ENV=production`. See
+[persistent storage setup and non-destructive migration](docs/PERSISTENT_STORAGE.md).
+The Vercel+SQLite ingestion guard remains enabled. Configuring only Neo4j is not
+a complete substitute for this UI's file inventory, role panels and reprocessing.

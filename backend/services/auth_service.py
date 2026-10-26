@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from backend.logging_config import logger
 from backend.storage_paths import default_data_dir
+from backend.config import settings
 
 USERS_FILE_PATH = os.environ.get("USERS_FILE_PATH") or str(
     default_data_dir() / "users.json"
@@ -25,6 +26,8 @@ class AuthService:
 
     def _ensure_storage(self) -> None:
         """Create users.json with initial admin officer if not present."""
+        if settings.STORAGE_BACKEND.lower() == "postgres":
+            return  # Schema is initialized by application startup; never seed demo users.
         if not self.storage_path.exists():
             # Never provision the predictable local-demo account on a public
             # production instance. The existing registration screen creates
@@ -47,6 +50,10 @@ class AuthService:
 
     def _load_users(self) -> List[Dict[str, Any]]:
         """Load all users from disk."""
+        if settings.STORAGE_BACKEND.lower() == "postgres":
+            from backend.local_store import connect
+            with connect() as conn:
+                return [json.loads(row["record"]) for row in conn.execute("SELECT record FROM officers")]
         try:
             if self.storage_path.exists():
                 with open(self.storage_path, "r", encoding="utf-8") as f:
@@ -97,8 +104,16 @@ class AuthService:
             "clearanceLevel": clearance_level or "Level 3: Lead Detective",
             "createdAt": time.strftime("%Y-%m-%d %H:%M:%S")
         }
-        users.append(new_user)
-        self._save_users(users)
+        if settings.STORAGE_BACKEND.lower() == "postgres":
+            from backend.local_store import connect
+            with connect() as conn:
+                inserted = conn.execute("INSERT INTO officers(badge,name_key,record) VALUES(?,?,?) ON CONFLICT DO NOTHING RETURNING badge",
+                                        (badge_number, officer_name.casefold(), json.dumps(new_user))).fetchone()
+                if not inserted:
+                    raise ValueError("An officer with this badge or name is already registered.")
+        else:
+            users.append(new_user)
+            self._save_users(users)
 
         logger.info(f"Registered new officer: {officer_name} ({badge_number})")
         return {

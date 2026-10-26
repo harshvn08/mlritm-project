@@ -22,6 +22,9 @@ UPLOAD_DIR = Path(os.environ.get("ATLAS_UPLOAD_DIR", DATA_DIR / "uploads"))
 
 
 def connect():
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        from backend.postgres_store import connect as postgres_connect
+        return postgres_connect()
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
@@ -31,6 +34,10 @@ def connect():
 
 
 def initialize():
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        from backend.postgres_store import initialize as initialize_postgres
+        initialize_postgres()
+        return
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     with connect() as conn:
         conn.executescript("""
@@ -178,7 +185,30 @@ def register_documents_present(uploaded_files: list[tuple[str, bytes, str]]) -> 
 
 
 def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, bytes, str]], uploaded_by: str | None = None):
-    initialize()
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        # Serialize read/rebuild/write for a single case, including concurrent
+        # uploads on different Vercel workers. Never lose a previous inventory.
+        initialize()
+        with connect() as conn:
+            conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(?,0))", (case_id,))
+            require_case(case_id)
+            return _ingest(case_id, title, case_data, uploaded_files, uploaded_by)
+    return _ingest(case_id, title, case_data, uploaded_files, uploaded_by)
+
+
+def document_bytes(row):
+    if "raw_content" in row.keys() and row["raw_content"] is not None:
+        return bytes(row["raw_content"])
+    if row["storage_path"] and Path(row["storage_path"]).exists():
+        return Path(row["storage_path"]).read_bytes()
+    if settings.STORAGE_BACKEND.lower() == "postgres":
+        raise ValueError("Original evidence bytes are missing; restore this document from a verified backup before reprocessing.")
+    return row["content"].encode()
+
+
+def _ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, bytes, str]], uploaded_by: str | None = None):
+    if settings.STORAGE_BACKEND.lower() != "postgres":
+        initialize()
     # Reparse the case's complete evidence inventory so later files cannot reset
     # parser-local person IDs, roles, metadata, or earlier source associations.
     with connect() as conn:
@@ -187,7 +217,7 @@ def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, 
     if existing:
         old_meta = json.loads(existing["metadata"])
         incoming_hashes = {hashlib.sha256(raw).hexdigest() for _, raw, _ in uploaded_files}
-        uploaded_files = [(row["filename"], Path(row["storage_path"]).read_bytes() if row["storage_path"] and Path(row["storage_path"]).exists() else row["content"].encode(), row["content"])
+        uploaded_files = [(row["filename"], document_bytes(row), row["content"])
                           for row in previous if row["sha256"] not in incoming_hashes] + uploaded_files
         from backend.services.ingestion_engine import CaseIngestionEngine
         from backend.services.schema_mapper import map_ingestion_to_graph_data
@@ -346,11 +376,14 @@ def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, 
             for filename, digest, text, stored_path, raw_content in docs:
                 document_id = hashlib.sha256(f"{case_id}:{digest}".encode()).hexdigest()
                 if not conn.execute("SELECT 1 FROM documents WHERE document_id=?", (document_id,)).fetchone():
-                    temp = Path(stored_path + ".tmp")
-                    temp.write_bytes(raw_content)
-                    temp.replace(stored_path)
-                    created_paths.append(stored_path)
-                    conn.execute("INSERT INTO documents(document_id,case_id,filename,sha256,content,storage_path) VALUES(?,?,?,?,?,?)", (document_id, case_id, filename, digest, text, stored_path))
+                    if settings.STORAGE_BACKEND.lower() == "postgres":
+                        conn.execute("INSERT INTO documents(document_id,case_id,filename,sha256,content,raw_content) VALUES(?,?,?,?,?,?)", (document_id, case_id, filename, digest, text, raw_content))
+                    else:
+                        temp = Path(stored_path + ".tmp")
+                        temp.write_bytes(raw_content)
+                        temp.replace(stored_path)
+                        created_paths.append(stored_path)
+                        conn.execute("INSERT INTO documents(document_id,case_id,filename,sha256,content,storage_path) VALUES(?,?,?,?,?,?)", (document_id, case_id, filename, digest, text, stored_path))
             for node in nodes.values():
                 conn.execute("INSERT INTO entities(entity_id,case_id,label,name,properties) VALUES(?,?,?,?,?) ON CONFLICT(case_id,entity_id) DO UPDATE SET label=excluded.label,name=excluded.name,properties=excluded.properties", (node["id"], case_id, node["labels"][0], node["name"], _json(node["properties"])))
             for edge in edges:
@@ -375,10 +408,10 @@ def reprocess_registered_case(case_id: str, expected_marker: str):
         case = conn.execute("SELECT title,metadata FROM cases WHERE case_id=?", (case_id,)).fetchone()
         if not case:
             raise ValueError(f"Case {case_id!r} was not found")
-        rows = conn.execute("SELECT document_id,filename,sha256,content,storage_path FROM documents WHERE case_id=? ORDER BY filename", (case_id,)).fetchall()
+        rows = conn.execute("SELECT * FROM documents WHERE case_id=? ORDER BY filename", (case_id,)).fetchall()
     docs=[]
     for row in rows:
-        content=Path(row["storage_path"]).read_bytes() if row["storage_path"] and Path(row["storage_path"]).exists() else row["content"].encode("utf-8")
+        content=document_bytes(row)
         text=row["content"]
         docs.append((row["filename"],row["sha256"],text,row["storage_path"] or "",content))
     combined="\n".join(d[2] for d in docs)
@@ -448,7 +481,7 @@ def reprocess_case(case_id):
     if not rows: raise ValueError("No stored source documents are available for reprocessing.")
     from backend.models.case_input import CaseData, CaseMetadata
     placeholder = CaseData(case_metadata=CaseMetadata(case_id=case_id, case_name=case["case_name"]))
-    files = [(d["filename"], Path(d["storage_path"]).read_bytes() if d["storage_path"] and Path(d["storage_path"]).exists() else d["content"].encode(), d["content"]) for d in rows]
+    files = [(d["filename"], document_bytes(d), d["content"]) for d in rows]
     ingest(case_id, case["case_name"], placeholder, files, case.get("uploaded_by"))
     return case_detail(case_id)
 
@@ -699,7 +732,7 @@ def local_dossier(case_id):
 def health():
     initialize()
     with connect() as c: c.execute("SELECT 1").fetchone()
-    return {"status":"healthy","database":"sqlite","path":str(DB_PATH),"latency_ms":0}
+    return {"status":"healthy","database":settings.STORAGE_BACKEND.lower(),"latency_ms":0}
 
 
 def delete_case(case_id):
