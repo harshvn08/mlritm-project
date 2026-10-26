@@ -10,10 +10,14 @@ from typing import Any
 import networkx as nx
 import re
 from backend.storage_paths import default_data_dir
+from backend.config import settings
+from backend.services.person_roles import extract_roles, role_properties
+from backend.services.evidence_person_mapping import apply_person_mappings
+from backend.case_access import may_read, require_case
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = default_data_dir()
-DB_PATH = Path(os.environ.get("ATLAS_SQLITE_PATH", os.environ.get("SQLITE_PATH", DATA_DIR / "atlas_local.sqlite3")))
+DB_PATH = Path(os.environ.get("ATLAS_SQLITE_PATH") or settings.SQLITE_PATH or DATA_DIR / "atlas_local.sqlite3")
 UPLOAD_DIR = Path(os.environ.get("ATLAS_UPLOAD_DIR", DATA_DIR / "uploads"))
 
 
@@ -168,13 +172,37 @@ def register_documents_present(uploaded_files: list[tuple[str, bytes, str]]) -> 
             continue
         if {"entity_id", "entity_name", "entity_type"}.issubset(headers) or {"relationship_id", "source", "target", "type", "evidence"}.issubset(headers):
             return True
+        if {"entity_name", "entity_type", "relationship", "related_entity"}.issubset(headers):
+            return True
     return False
 
 
 def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, bytes, str]], uploaded_by: str | None = None):
     initialize()
+    # Reparse the case's complete evidence inventory so later files cannot reset
+    # parser-local person IDs, roles, metadata, or earlier source associations.
+    with connect() as conn:
+        existing = conn.execute("SELECT * FROM cases WHERE case_id=?", (case_id,)).fetchone()
+        previous = conn.execute("SELECT * FROM documents WHERE case_id=? ORDER BY created_at,document_id", (case_id,)).fetchall()
+    if existing:
+        old_meta = json.loads(existing["metadata"])
+        incoming_hashes = {hashlib.sha256(raw).hexdigest() for _, raw, _ in uploaded_files}
+        uploaded_files = [(row["filename"], Path(row["storage_path"]).read_bytes() if row["storage_path"] and Path(row["storage_path"]).exists() else row["content"].encode(), row["content"])
+                          for row in previous if row["sha256"] not in incoming_hashes] + uploaded_files
+        from backend.services.ingestion_engine import CaseIngestionEngine
+        from backend.services.schema_mapper import map_ingestion_to_graph_data
+        engine = CaseIngestionEngine()
+        engine.api_key = None  # Local evidence reprocessing stays deterministic even when Copilot has a key.
+        for filename, raw, text in uploaded_files:
+            if not register_documents_present([(filename, raw, text)]):
+                engine.parse_file(filename, text)
+        case_data = map_ingestion_to_graph_data(engine.consolidate().model_dump())
+        title = existing["title"]
+        uploaded_by = old_meta.get("uploaded_by") or uploaded_by
     data = case_data.model_dump(mode="json")
     meta = data["case_metadata"]
+    if existing:
+        meta = {**old_meta, **{k: v for k, v in meta.items() if v is not None and k not in {"case_id", "case_name", "uploaded_by"}}}
     meta.update({"case_id": case_id, "case_name": title, "uploaded_by": uploaded_by or meta.get("uploaded_by")})
     data["case_metadata"] = meta
     nodes: dict[str, dict] = {}
@@ -210,6 +238,23 @@ def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, 
                     "source_documents":list(dict.fromkeys(old_props.get("source_documents",[])+[x for x in [old_props.get("source_document")] if x]+new_props.get("source_documents",[])+[x for x in [new_props.get("source_document")] if x]))}
             del nodes[existing_id]
     nodes.update(register_nodes)
+    assertions = extract_roles([(filename, text) for filename, _, text, _, _ in docs])
+    for name, *_ in assertions:
+        if not any(n["name"].casefold() == name.casefold() and "Person" in n["labels"] for n in nodes.values()):
+            eid = "PERSON_" + hashlib.sha256(f"{case_id}:{name.casefold()}".encode()).hexdigest()[:20]
+            nodes[eid] = {"id": eid, "labels": ["Person"], "name": name, "case_ids": [case_id], "properties": {}}
+    edges.extend(apply_person_mappings(case_id, docs, nodes))
+    for node in nodes.values():
+        if "Person" in node["labels"]:
+            explicit = [a for a in assertions if a[0].casefold() == node["name"].casefold()]
+            node["properties"].update(role_properties(explicit))
+    for _, _, text, _, _ in docs:
+        fir = re.search(r"\bFIR\s*(?:number|no\.?|#)?\s*[:#-]?\s*((?=[^\s;,]*\d)[A-Z0-9][A-Z0-9/_-]*)", text, re.I)
+        category = re.search(r"(?:crime\s+(?:classification|category|type))\s*:\s*([^\r\n;]+)", text, re.I)
+        if fir: meta["fir_number"] = fir.group(1)
+        if category: meta["case_type"] = meta["crime_category"] = category.group(1).strip()
+    if meta.get("case_type") == "GENERAL_INVESTIGATION": meta["case_type"] = None
+    if meta.get("summary", "") and "FIR number: N/A" in meta["summary"]: meta["summary"] = None
     edges.extend(register_edges)
     phone_ids = {str(n.get("properties", {}).get("phone_number") or n.get("name")): n["id"]
         for n in nodes.values() if "Phone" in n.get("labels", [])}
@@ -295,6 +340,9 @@ def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, 
         with connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             conn.execute("INSERT INTO cases(case_id,title,metadata) VALUES(?,?,?) ON CONFLICT(case_id) DO UPDATE SET title=excluded.title, metadata=excluded.metadata", (case_id, title, _json(meta)))
+            # Only derived data for this case is rebuilt, inside the same transaction.
+            conn.execute("DELETE FROM relationships WHERE case_id=?", (case_id,))
+            conn.execute("DELETE FROM entities WHERE case_id=?", (case_id,))
             for filename, digest, text, stored_path, raw_content in docs:
                 document_id = hashlib.sha256(f"{case_id}:{digest}".encode()).hexdigest()
                 if not conn.execute("SELECT 1 FROM documents WHERE document_id=?", (document_id,)).fetchone():
@@ -312,7 +360,7 @@ def ingest(case_id: str, title: str, case_data, uploaded_files: list[tuple[str, 
         for path in created_paths:
             Path(path).unlink(missing_ok=True)
         raise
-    return {"nodes": len(nodes), "relationships": len(edges), "source_records": len(docs)}, data
+    return {"nodes": sum("Case" not in n["labels"] for n in nodes.values()), "relationships": len(edges), "source_records": len(docs)}, data
 
 
 def reprocess_registered_case(case_id: str, expected_marker: str):
@@ -360,7 +408,8 @@ def reprocess_registered_case(case_id: str, expected_marker: str):
 def list_cases(limit=50, offset=0, status_filter=None, uploaded_by=None):
     with connect() as c:
         rows = c.execute("SELECT c.*, (SELECT count(*) FROM entities e WHERE e.case_id=c.case_id AND e.label!='Case') total_entities, (SELECT count(*) FROM documents d WHERE d.case_id=c.case_id) doc_count FROM cases c ORDER BY created_at DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
-    cases = [{"case_id": r["case_id"], "case_name": r["title"], "status": "OPEN", "created_at": r["created_at"], "total_entities": r["total_entities"], "evidences_collected": [{"name": x["filename"], "type": Path(x["filename"]).suffix[1:].upper()} for x in documents(r["case_id"])], **json.loads(r["metadata"])} for r in rows]
+    cases = [{"status": "OPEN", **json.loads(r["metadata"]), "case_id": r["case_id"], "case_name": r["title"], "created_at": r["created_at"], "total_entities": r["total_entities"], "evidences_collected": [{"name": x["filename"], "type": Path(x["filename"]).suffix[1:].upper()} for x in documents(r["case_id"])]} for r in rows]
+    cases = [case for case in cases if may_read(case)]
     if status_filter: cases = [c for c in cases if str(c.get("status", "OPEN")).lower() == status_filter.lower()]
     if uploaded_by: cases = [c for c in cases if str(c.get("uploaded_by") or "").lower() == uploaded_by.lower()]
     return cases
@@ -371,23 +420,49 @@ def documents(case_id):
 
 
 def case_detail(case_id):
-    cases = list_cases(500)
-    case = next((x for x in cases if x["case_id"] == case_id), None)
-    if not case: return None
+    require_case(case_id)
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM cases WHERE case_id=?", (case_id,)).fetchone()
+    if row is None: return None
+    case = {**json.loads(row["metadata"]), "case_id": row["case_id"], "case_name": row["title"], "created_at": row["created_at"]}
     graph = graph_data(case_id)
     case["total_entities"] = sum("Case" not in n["labels"] for n in graph["nodes"])
-    case["primary_suspects"] = [{"name": n["name"], "roles": n["properties"].get("roles", [])} for n in graph["nodes"] if "Person" in n["labels"]]
+    people = [{"entity_id": n["id"], "name": n["name"], **n["properties"]} for n in graph["nodes"] if "Person" in n["labels"]]
+    case["people"] = people
+    for field, role in (("primary_suspects", "suspect"), ("victims", "victim"), ("witnesses", "witness"), ("persons_of_interest", "person_of_interest")):
+        case[field] = [p for p in people if p.get("role") == role and not p.get("role_conflict")]
+    case["role_conflicts"] = [p for p in people if p.get("role_conflict")]
+    case["total_relationships"] = len(graph["edges"])
+    case["analysis_status"] = "processed"
     case["summary"] = case.get("summary") or "Locally processed evidence; extracted links require analyst verification."
     case["evidences_collected"] = [{"name": d["filename"], "type": Path(d["filename"]).suffix[1:].upper()} for d in documents(case_id)]
+    case["documents"] = [{"document_id": d["document_id"], "filename": d["filename"], "sha256": d["sha256"], "created_at": d["created_at"], "content": d["content"], "analysis_status": "processed"} for d in documents(case_id)]
     return case
 
 
+def reprocess_case(case_id):
+    """Rebuild derived analysis using preserved documents, without deleting evidence."""
+    case = case_detail(case_id)
+    if case is None: return None
+    rows = documents(case_id)
+    if not rows: raise ValueError("No stored source documents are available for reprocessing.")
+    from backend.models.case_input import CaseData, CaseMetadata
+    placeholder = CaseData(case_metadata=CaseMetadata(case_id=case_id, case_name=case["case_name"]))
+    files = [(d["filename"], Path(d["storage_path"]).read_bytes() if d["storage_path"] and Path(d["storage_path"]).exists() else d["content"].encode(), d["content"]) for d in rows]
+    ingest(case_id, case["case_name"], placeholder, files, case.get("uploaded_by"))
+    return case_detail(case_id)
+
+
 def graph_data(case_id=None, limit=None, focus_entity_id=None, hops=1):
+    if case_id: require_case(case_id)
     with connect() as c:
+        allowed = {r["case_id"] for r in c.execute("SELECT case_id,metadata FROM cases").fetchall() if may_read(json.loads(r["metadata"]))}
         if case_id:
             ns=c.execute("SELECT * FROM entities WHERE case_id=?",(case_id,)).fetchall(); rs=c.execute("SELECT * FROM relationships WHERE case_id=?",(case_id,)).fetchall()
         else:
             ns=c.execute("SELECT * FROM entities").fetchall(); rs=c.execute("SELECT * FROM relationships").fetchall()
+    ns = [r for r in ns if r["case_id"] in allowed]
+    rs = [r for r in rs if r["case_id"] in allowed]
     nodes=[]
     for r in ns:
         properties=json.loads(r["properties"])
@@ -590,6 +665,7 @@ def entity_detail(entity_id):
 
 def relationship_detail(relationship_id):
     with connect() as c: row=c.execute("SELECT * FROM relationships WHERE relationship_id=?",(relationship_id,)).fetchone()
+    if row: require_case(row["case_id"])
     return None if not row else {"relationship_id":row["relationship_id"],"type":row["rel_type"],"start_node":row["source"],"end_node":row["target"],"properties":json.loads(row["properties"]),"evidence":row["evidence"],"certainty":row["certainty"]}
 
 
@@ -617,7 +693,7 @@ def local_dossier(case_id):
     if not case: return None
     graph=graph_data(case_id)
     people=[n["name"] for n in graph["nodes"] if "Person" in n["labels"]]
-    return {"case_id":case_id,"case_name":case["case_name"],"status":case.get("status","OPEN"),"risk_level":"NOT_ASSESSED","executive_summary":f"Offline evidence summary: {len(graph['nodes'])-1} extracted entities and {len(graph['edges'])} evidence links across {len(case['evidences_collected'])} uploaded documents. No allegation or risk assessment was generated.","modus_operandi":"Not assessed by the local rule-based extractor.","key_suspects":[],"critical_anomalies":[],"investigative_leads":[f"Verify extracted person record: {name}" for name in people],"key_findings":[f"Extracted person: {name}" for name in people],"ai_model":"local-rule-based-summary"}
+    return {"case_id":case_id,"case_name":case["case_name"],"status":case.get("status","OPEN"),"risk_level":"NOT_ASSESSED","executive_summary":f"Evidence summary: {case['total_entities']} entities and {case['total_relationships']} links across {len(case['documents'])} documents.","modus_operandi":"Not assessed.","key_suspects":[p["name"] for p in case["primary_suspects"]],"victims":case["victims"],"witnesses":case["witnesses"],"persons_of_interest":case["persons_of_interest"],"role_conflicts":case["role_conflicts"],"critical_anomalies":[],"investigative_leads":[f"Verify extracted person record: {name}" for name in people],"key_findings":[f"{p['name']}: {', '.join(p['roles'])}" for p in case['people']],"ai_model":"local-rule-based-summary"}
 
 
 def health():

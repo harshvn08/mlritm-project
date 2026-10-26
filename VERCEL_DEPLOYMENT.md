@@ -23,15 +23,15 @@ included in production requests. Same-origin requests do not need CORS setup.
    root as the project root (do not set `frontend/` as the project root).
    Vercel reads `vercel.json` to build both services.
 3. Enable/accept the Vercel Services configuration if prompted, then deploy.
-   No Neo4j server, API key, database password, or environment variable is
-   required for an ephemeral demo deployment.
+   Rendering the interface does not require an AI key. Conversational Copilot
+   requires the API service's `GEMINI_API_KEY`; see [Gemini setup](docs/COPILOT_GEMINI.md).
 4. Open the URL Vercel assigns. Verify `/api/health` returns JSON with
    `"status":"healthy"` and `"database":"sqlite"`; verify `/api/auth/login`
    and `/api/auth/signup` reach FastAPI (the login route returns an expected
    validation/authentication response when called without valid credentials).
-5. Register an officer in the existing UI, then test uploads smaller than
-   the function request limit and check Graph Explorer. This is a demo only;
-   the uploaded records may disappear at any time.
+5. Sign in and verify routing. SQLite ingestion on Vercel now returns an explicit
+   503 because ephemeral storage cannot retain cases reliably. Persisted case
+   workflows require durable storage; adding a Gemini key does not change this.
 
 To preview locally with Vercel's service router, install/use the current
 Vercel CLI and run from the repository root:
@@ -78,7 +78,8 @@ hosting path; the Vercel limit cannot be raised in this repository.
 ## Authentication and public access
 
 The existing sign-in/register endpoints remain available, and Vercel starts
-without the local demo user's seeded credentials. However, the existing
-backend does not currently require an authenticated session on case, graph,
-or ingestion APIs. Treat this public deployment as accessible to anyone with
-the URL and use synthetic data only until server-side authorization is added.
+without the local demo user's seeded credentials. Production SQLite APIs require
+a server-issued bearer session. Owned cases enforce officer access, and Gemini
+chat requires authentication in every environment. Login sessions still depend
+on the configured storage; temporary SQLite sessions cannot be shared reliably
+between Vercel function instances.

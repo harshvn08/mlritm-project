@@ -59,7 +59,7 @@ def map_ingestion_to_graph_data(ingestion_data: Dict[str, Any]) -> CaseData:
             continue
         pid = p.get("person_id") or p.get("id") or f"P_{abs(hash(clean_n)) % 10000}"
         name = clean_n
-        roles = p.get("roles") or ([p.get("status")] if p.get("status") else ([p.get("role")] if p.get("role") and isinstance(p.get("role"), str) else ["Suspect"]))
+        roles = p.get("roles") or ([p.get("status")] if p.get("status") else ([p.get("role")] if p.get("role") and isinstance(p.get("role"), str) else ["unknown"]))
         if isinstance(roles, str):
             roles = [roles]
         

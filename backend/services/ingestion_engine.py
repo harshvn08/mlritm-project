@@ -13,6 +13,7 @@ from backend.models.ingestion_models import (
 )
 
 from backend.models.case_input import CaseData
+from backend.services.person_roles import extract_roles
 
 
 try:
@@ -165,7 +166,7 @@ CASE OPERATIONAL DATA:
     def _get_or_create_person(
         self,
         name: str,
-        status: str = "Suspect",
+        status: str = "unknown",
         age: Optional[int] = None,
         person_id: Optional[str] = None,
         gender: Optional[str] = None,
@@ -214,7 +215,7 @@ CASE OPERATIONAL DATA:
                             existing.phone_numbers.append(ph)
                 return existing
             else:
-                p_roles = roles or ([status] if status else ["Suspect"])
+                p_roles = roles or ([status] if status else ["unknown"])
                 person = PersonEntity(
                     id=person_id,
                     name=clean_name,
@@ -249,7 +250,7 @@ CASE OPERATIONAL DATA:
         # 3. Create new entity with generated ID
         generated_id = f"P_{self.person_id_counter}"
         self.person_id_counter += 1
-        p_roles = roles or ([status] if status else ["Suspect"])
+        p_roles = roles or ([status] if status else ["unknown"])
         person = PersonEntity(
             id=generated_id,
             name=clean_name,
@@ -269,6 +270,11 @@ CASE OPERATIONAL DATA:
 
     def parse_file(self, filename: str, content: str, api_key_override: Optional[str] = None) -> None:
         """Determines file type and routes to appropriate parser."""
+        for name, role, source, record, evidence in extract_roles([(filename, content)]):
+            person = self._get_or_create_person(name, role)
+            if person:
+                person.roles = list(dict.fromkeys(person.roles + [role]))
+                person.properties.setdefault("role_provenance", []).append({"role": role, "source_document": source, "source_record": record, "evidence_text": evidence})
         active_api_key = api_key_override or self.api_key
         
         if active_api_key:
@@ -356,7 +362,7 @@ CASE OPERATIONAL DATA:
             role_val = p.get("status") or p.get("role")
             if isinstance(role_val, list) and role_val:
                 role_val = role_val[0]
-            status = str(role_val) if role_val else "Suspect"
+            status = str(role_val) if role_val else "unknown"
             self._get_or_create_person(
                 name=name,
                 status=status,
@@ -519,7 +525,7 @@ CASE OPERATIONAL DATA:
             receiver_acc = get_val("Receiver_Account", "target_account", "receiver_account_no", "receiver_acc", "to_account", "receiver")
             receiver_name = get_val("Receiver_Name", "target_name", "to_name", "receiver_owner")
             amount_str = get_val("Amount_INR", "amount", "amt", "value") or "0"
-            timestamp = get_val("Timestamp", "time", "date", "datetime", "txn_date") or None
+            timestamp = get_val("Timestamp", "time", "date", "datetime", "txn_date", "timestamp_local") or None
             txn_id = get_val("Transaction_ID", "txn_id", "id", "ref_no", "reference_id") or f"TXN_{row_idx}"
 
             if not sender_acc or not receiver_acc:
@@ -532,7 +538,7 @@ CASE OPERATIONAL DATA:
 
             sender_person = None
             if sender_name and not sender_name.startswith("User_") and is_valid_person_name(sender_name):
-                sender_person = self._get_or_create_person(sender_name, "Suspect")
+                sender_person = self._get_or_create_person(sender_name, "unknown")
 
             if sender_acc and sender_acc not in self.accounts_by_num:
                 self.accounts_by_num[sender_acc] = BankAccountEntity(
@@ -543,7 +549,7 @@ CASE OPERATIONAL DATA:
 
             receiver_person = None
             if receiver_name and not receiver_name.startswith("User_") and is_valid_person_name(receiver_name):
-                receiver_person = self._get_or_create_person(receiver_name, "Suspect")
+                receiver_person = self._get_or_create_person(receiver_name, "unknown")
 
             if receiver_acc and receiver_acc not in self.accounts_by_num:
                 self.accounts_by_num[receiver_acc] = BankAccountEntity(
@@ -570,9 +576,9 @@ CASE OPERATIONAL DATA:
                             return (v or "").strip()
                 return ""
 
-            caller = get_val("Caller_MSISDN", "source_phone", "caller", "calling_number", "caller_number", "from_msisdn")
-            recipient = get_val("Recipient_MSISDN", "target_phone", "recipient", "callee", "called_number", "to_msisdn")
-            timestamp = get_val("Timestamp", "time", "date", "datetime", "call_date") or None
+            caller = get_val("Caller_MSISDN", "source_phone", "caller", "calling_number", "caller_number", "from_msisdn", "caller_phone")
+            recipient = get_val("Recipient_MSISDN", "target_phone", "recipient", "callee", "called_number", "to_msisdn", "receiver_phone")
+            timestamp = get_val("Timestamp", "time", "date", "datetime", "call_date", "timestamp_local") or None
             duration_str = get_val("Duration_Sec", "duration", "duration_seconds", "call_duration") or "0"
             cell_tower = get_val("CellTower_ID", "cell_tower", "tower_id", "tower") or None
 
@@ -668,7 +674,7 @@ CASE OPERATIONAL DATA:
             c_name = name_str.strip()
             if is_valid_person_name(c_name):
                 pid = record_id.strip() if record_id else None
-                person = self._get_or_create_person(c_name, "Complainant", person_id=pid)
+                person = self._get_or_create_person(c_name, "unknown", person_id=pid)
                 if person and phone_str:
                     msisdn = phone_str.strip()
                     if msisdn not in self.phones_by_msisdn:
@@ -695,7 +701,7 @@ CASE OPERATIONAL DATA:
             c_name_clean = sub_name.strip()
             if is_valid_person_name(c_name_clean):
                 pid = rec_id.strip() if rec_id else None
-                self._get_or_create_person(c_name_clean, "Suspect", person_id=pid)
+                self._get_or_create_person(c_name_clean, "unknown", person_id=pid)
 
         # 2d. General Name + Local Record ID pattern
         general_id_matches = re.findall(

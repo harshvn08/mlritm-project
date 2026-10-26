@@ -1123,9 +1123,7 @@ class GraphService:
 
             if any(s in roles for s in ["victim", "complainant"]):
                 victims.append(person_entry)
-            elif any(s in roles for s in ["suspect", "accused", "director", "shooter", "organizer", "courier", "mule", "operator"]):
-                suspects.append(person_entry)
-            else:
+            elif any(s in roles for s in ["suspect", "accused"]) and not any(s in roles for s in ["victim", "complainant"]):
                 suspects.append(person_entry)
 
         # 4. Entity breakdown and collected evidences

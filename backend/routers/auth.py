@@ -34,6 +34,8 @@ def signup(payload: SignUpRequest) -> Dict[str, Any]:
             department=payload.department or "Special Crime & Anti-Extortion Unit",
             clearance_level=payload.clearanceLevel or "Level 3: Lead Detective"
         )
+        from backend.case_access import issue_session
+        session["accessToken"] = issue_session(session["badgeNumber"])
         return {
             "success": True,
             "message": f"Officer '{payload.officerName}' registered successfully.",
@@ -60,6 +62,8 @@ def login(payload: LoginRequest) -> Dict[str, Any]:
             identifier=payload.badgeNumber,
             password=payload.password
         )
+        from backend.case_access import issue_session
+        session["accessToken"] = issue_session(session["badgeNumber"])
         return {
             "success": True,
             "message": "Authentication successful.",

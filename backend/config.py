@@ -35,6 +35,7 @@ class Settings(BaseSettings):
 
     # AI Intelligence (Gemini)
     GEMINI_API_KEY: Optional[str] = Field(default=None)
+    GEMINI_MODEL: str = "gemini-flash-latest"
 
 
 settings = Settings()

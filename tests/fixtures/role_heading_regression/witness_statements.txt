@@ -1,0 +1,14 @@
+FICTIONAL INTERVIEW NOTES — TRAINING DATA ONLY
+Case ID: MUR-2026-041
+
+STATEMENT W-001 — NEHA REDDY (WITNESS)
+Neha Reddy says she saw a sedan. She could not identify the driver.
+
+STATEMENT S-001 — ARJUN MEHTA (PERSON OF INTEREST / SUSPECT A)
+Arjun Mehta denies visiting the residence.
+
+STATEMENT S-002 — KARAN SHAH (PERSON OF INTEREST / SUSPECT B)
+Karan Shah denies being at the residence.
+
+STATEMENT P-001 — ROHIT VERMA (PERSON OF INTEREST)
+Rohit Verma says others may use the associated vehicle.

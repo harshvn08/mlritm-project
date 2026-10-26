@@ -1,0 +1,10 @@
+SYNTHETIC CASE — FICTIONAL TEST DATA ONLY
+FIR Number: SYN/0042/2026
+Crime Classification: SYNTHETIC THEFT
+Vikram Rao — Victim
+Arjun Mehta — Suspect A
+Karan Shah — Suspect B
+Neha Reddy — Witness
+Rohit Verma — Person of interest
+Victim: Vikram Rao; Phone: 1111111111
+Suspect: Arjun Mehta; Phone: 2222222222

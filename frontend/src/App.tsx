@@ -32,7 +32,6 @@ import {
   ResetDbConfirmContent,
   DeleteCaseConfirmContent
 } from './components/Modals';
-import { LocalCaseStore } from './services/fileStore';
 
 
 export default function App() {
@@ -49,7 +48,13 @@ export default function App() {
 
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [selectedCase, setSelectedCase] = useState<string | null>(() => new URLSearchParams(location.search).get('case_id'));
+  useEffect(() => {
+    const url = new URL(location.href);
+    if (selectedCase) url.searchParams.set('case_id', selectedCase);
+    else url.searchParams.delete('case_id');
+    history.replaceState(null, '', url);
+  }, [selectedCase]);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [modal, setModal] = useState<ModalState | null>(null);
@@ -126,8 +131,7 @@ export default function App() {
     }
   }, []);
 
-  // Load cases
-  // Load cases (merges API cases with local persistent uploaded cases)
+  // Database records are authoritative for case metadata and analysis.
   const fetchCases = useCallback(async (): Promise<Case[]> => {
     let apiCases: Case[] = [];
     try {
@@ -136,29 +140,7 @@ export default function App() {
       apiCases = [];
     }
 
-    const localCases = LocalCaseStore.getAll();
-    const mergedMap = new Map<string, Case>();
-
-    // 1. Add API cases
-    apiCases.forEach(c => {
-      if (c && c.case_id) {
-        mergedMap.set(c.case_id.toLowerCase(), c);
-      }
-    });
-
-    // 2. Add / merge local uploaded cases
-    localCases.forEach(c => {
-      if (c && c.case_id) {
-        const key = c.case_id.toLowerCase();
-        if (mergedMap.has(key)) {
-          mergedMap.set(key, { ...mergedMap.get(key), ...c });
-        } else {
-          mergedMap.set(key, c);
-        }
-      }
-    });
-
-    const list = Array.from(mergedMap.values());
+    const list = apiCases.filter(caseRecord => Boolean(caseRecord?.case_id));
     setCases(list);
     return list;
   }, []);

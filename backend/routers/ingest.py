@@ -2,6 +2,8 @@ import hashlib
 import io
 import json
 import csv
+import re
+import os
 from typing import List, Optional, Tuple, Dict, Any, Union
 from fastapi import APIRouter, File, UploadFile, HTTPException, Header, Query, Body, status, Response, Form
 from pydantic import ValidationError
@@ -249,6 +251,7 @@ async def ingest_files(
     files: Optional[List[UploadFile]] = File(None),
     file: Optional[UploadFile] = File(None),
     case_id: Optional[str] = Query(None),
+    existing_case: bool = Query(False),
     case_title: Optional[str] = Form(None),
     uploaded_by: Optional[str] = Form(None),
     officer_name: Optional[str] = Form(None),
@@ -263,6 +266,20 @@ async def ingest_files(
 
     if not upload_files:
         raise HTTPException(status_code=400, detail="No files uploaded.")
+    if settings.STORAGE_BACKEND.lower() == "sqlite" and os.environ.get("VERCEL") == "1":
+        raise HTTPException(status_code=503, detail="Case ingestion requires persistent shared storage. Vercel's temporary SQLite files are isolated between instances and cannot retain cases reliably. Run the SQLite backend on a persistent volume or configure the existing Neo4j backend.")
+    if existing_case and settings.STORAGE_BACKEND.lower() == "sqlite":
+        from backend.local_store import case_detail
+        if not case_id or case_detail(case_id) is None:
+            raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found. Evidence was not uploaded.")
+
+    if settings.STORAGE_BACKEND.lower() == "sqlite":
+        from backend.case_access import current_officer
+        badge = current_officer.get()
+        if uploaded_by and not badge:
+            raise HTTPException(status_code=401, detail="Sign in again before uploading officer-owned evidence.")
+        if badge:
+            uploaded_by = badge
 
     active_key = x_api_key or api_key
     # Local mode deliberately uses deterministic offline extraction, never an external LLM.
@@ -333,7 +350,8 @@ async def ingest_files(
             legacy_files += 1
 
     if legacy_files:
-        if not _has_extractable_content(engine) and not register_documents_present(local_documents):
+        local_identifiers = settings.STORAGE_BACKEND.lower() == "sqlite" and any(re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.I) for _, _, text in local_documents)
+        if not _has_extractable_content(engine) and not register_documents_present(local_documents) and not local_identifiers:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No usable entities or source-supported relationships were extracted. Check the CSV headers or provide a document containing identifiable people, phones, accounts, vehicles, or explicit associations.",
@@ -366,7 +384,7 @@ async def ingest_files(
         if not case_id:
             case_id = "CASE_" + hashlib.sha256((case_title or "case" + str(len(local_documents))).encode()).hexdigest()[:12].upper()
         title = case_title.strip() if case_title and case_title.strip() else engine.case_metadata.case_name or f"Case {case_id}"
-        if not _case_data_has_evidence(documents[0][0]) and not register_documents_present(local_documents):
+        if not _case_data_has_evidence(documents[0][0]) and not register_documents_present(local_documents) and not any(re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.I) for _, _, text in local_documents):
             raise HTTPException(status_code=422, detail="No supported entities or relationships were extracted. Check document contents and CSV headers.")
         # Multiple files are consolidated into one case; retain parsed actual contents as source documents.
         combined_data = documents[0][0]

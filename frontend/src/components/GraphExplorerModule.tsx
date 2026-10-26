@@ -40,8 +40,8 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
   const [aiChatLog, setAiChatLog] = useState<AiChatMessage[]>([
     {
       sender: 'bot',
-      model: 'Atlas AI Graph Extractor',
-      content: "Choose a case, then ask about recorded entities, paths, relationships, or source documents. Answers use stored evidence only.",
+      model: 'Gemini Copilot',
+      content: "Ask a question about your authorized case records. Choose a case to focus the conversation.",
       chips: [
         'Who is the main suspect?', 'Which entities are most connected?', 'What information is missing?'
       ]
@@ -49,6 +49,16 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
   ]);
   const [aiInput, setAiInput] = useState<string>('');
   const [aiQuerying, setAiQuerying] = useState<boolean>(false);
+  const [aiValidation, setAiValidation] = useState('');
+  const [retryQuestion, setRetryQuestion] = useState<string | null>(null);
+  const aiRequest = useRef<AbortController | null>(null);
+  const aiRequestId = useRef(0);
+  const aiHistory = useRef<Array<{role: 'user' | 'model'; content: string}>>([]);
+  const aiBody = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (aiBody.current) aiBody.current.scrollTop = aiBody.current.scrollHeight;
+  }, [aiChatLog, aiQuerying]);
 
   const visibleGraph = useMemo(() => {
     const all = graphNodes.filter(n => !n.labels?.includes('Case'));
@@ -103,10 +113,18 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
   }, [selectedCase]);
 
   useEffect(() => {
-    setAiChatLog([{ sender: 'bot', model: 'Local Investigator Copilot', content: caseFilter ? `Case context set to ${cases.find(c => c.case_id === caseFilter)?.case_name || caseFilter}. Answers are generated from its stored records.` : 'Select a case above before asking about evidence or relationships.', chips: ['Which entities are most connected?', 'What information is missing?', 'Summarize this case'] }]);
+    aiRequestId.current += 1;
+    aiRequest.current?.abort();
+    aiRequest.current = null;
+    aiHistory.current = [];
+    setAiQuerying(false);
+    setRetryQuestion(null);
+    setAiValidation('');
+    setAiChatLog([{ sender: 'bot', model: 'Gemini Copilot', content: caseFilter ? `Case context set to ${caseFilter}. Ask any question; answers use its authorized stored records.` : 'Ask any question. Case context is limited to records you are authorized to access.', chips: ['Which entities are most connected?', 'What information is missing?', 'Summarize this case'] }]);
     setSelectedNode(null);
     setSelectedEdge(null);
-  }, [caseFilter, cases]);
+    return () => { aiRequestId.current += 1; aiRequest.current?.abort(); aiRequest.current = null; };
+  }, [caseFilter]);
 
   // Render Network Graph
   useEffect(() => {
@@ -145,7 +163,10 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
 
       const labels = n.labels || [];
       if (labels.includes('Organization')) { nodeShape = 'square'; nodeBg = '#8b5cf6'; }
-      else if (isPerson) { nodeBg = '#3b82f6'; }
+      else if (isPerson) {
+        const role = String(n.properties?.role || 'unknown');
+        nodeBg = n.properties?.role_conflict ? '#E7B94F' : role === 'victim' ? '#00B887' : role === 'suspect' ? '#C8203B' : role === 'witness' ? '#2788E8' : role === 'person_of_interest' ? '#8739D0' : '#73818D';
+      }
       else if (isPhone || labels.some(x => ['BankAccount','Vehicle','SocialHandle','IPAddress','Email','CellTower'].includes(x))) { nodeBg = '#06b6d4'; }
       else if (labels.some(x => ['Transaction','Event'].includes(x))) { nodeShape = 'diamond'; nodeBg = '#f59e0b'; }
       else if (labels.includes('Location')) { nodeBg = '#22c55e'; }
@@ -220,6 +241,7 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
         tooltipLines.push(`👤 Associated Person: ${String(associatedPerson).split('\n')[0].replace(/^\(|\)$/g, '').trim()}`);
       }
       if (n.properties?.role) tooltipLines.push(`Role: ${n.properties.role}`);
+      if (n.properties?.role_conflict) tooltipLines.push('Conflicting source roles: analyst review required');
       if (n.properties?.phone_number && n.properties.phone_number !== n.name) tooltipLines.push(`Phone: ${n.properties.phone_number}`);
       if (n.properties?.risk_score !== undefined) tooltipLines.push(`Risk Score: ${n.properties.risk_score}`);
 
@@ -449,41 +471,46 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
 
   const handleAiQuerySubmit = async (e?: React.FormEvent | null, promptOverride: string | null = null) => {
     if (e && e.preventDefault) e.preventDefault();
-    const q = promptOverride || aiInput.trim();
-    if (!q) return;
-
-    if (!caseFilter) {
-      setAiChatLog(prev => [...prev, { sender: 'user', content: q }, { sender: 'bot', model: 'Local Investigator Copilot', content: 'Select a case in the Case Filter first. I only answer from a selected case’s stored evidence.' }]);
-      return;
-    }
+    if (aiRequest.current) return;
+    const q = (promptOverride ?? aiInput).trim();
+    if (!q) { setAiValidation('Enter a message before sending.'); return; }
+    setAiValidation('');
+    const requestId = ++aiRequestId.current;
+    const controller = new AbortController();
+    aiRequest.current = controller;
+    const timer = window.setTimeout(() => controller.abort(), 45000);
 
     if (!promptOverride) setAiInput('');
-    setAiChatLog(prev => [...prev, { sender: 'user', content: q }]);
+    setAiChatLog(prev => [...prev.slice(-39), { sender: 'user', content: q }]);
     setAiQuerying(true);
 
     try {
-      const res = await API.post<{ ai_model?: string; answer?: string; facts?: string[]; intent?: string }>('/api/graph/ai-query', {
-        question: q,
-        case_id: caseFilter || null,
-        nodes_count: graphNodes?.length || null,
-        edges_count: graphEdges?.length || null,
-        selected_node_id: selectedNode?.id || null
+      const res = await API.send<{ ai_model: string; answer: string }>('/api/graph/ai-query', {
+        method: 'POST', signal: controller.signal,
+        body: JSON.stringify({ question: q, case_id: caseFilter || null,
+          history: aiHistory.current.slice(-12).map(turn => ({...turn, content: turn.content.slice(0, 6000)})), selected_node_id: selectedNode?.id || null })
       });
-
+      if (requestId !== aiRequestId.current) return;
+      if (!res.answer?.trim()) throw new Error('Gemini returned an empty response. Please retry.');
+      aiHistory.current = [...aiHistory.current, {role: 'user', content: q}, {role: 'model', content: res.answer}].slice(-12) as Array<{role: 'user' | 'model'; content: string}>;
+      setRetryQuestion(null);
       setAiChatLog(prev => [...prev, {
         sender: 'bot',
-        model: res.ai_model || 'Atlas AI Graph Extractor',
-        content: res.answer || 'No specific inference generated.',
+        model: res.ai_model,
+        content: res.answer,
         chips: ['Which entities are most connected?', 'What information is missing?']
       }]);
     } catch (err: any) {
+      if (requestId !== aiRequestId.current) return;
+      setRetryQuestion(q);
       setAiChatLog(prev => [...prev, {
         sender: 'bot',
         error: true,
-        content: `Inference query error: ${err.message}`
+        content: controller.signal.aborted ? 'The request timed out. Retry your message.' : `Copilot error: ${err.message}`
       }]);
     } finally {
-      setAiQuerying(false);
+      window.clearTimeout(timer);
+      if (requestId === aiRequestId.current) { aiRequest.current = null; setAiQuerying(false); }
     }
   };
 
@@ -674,12 +701,12 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
               <div className="flex items-center gap-1.5" style={{display:'flex', alignItems:'center', gap:'7px'}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
                 <span className="font-bold text-xs" style={{fontWeight:700, fontSize:'13px', color:'var(--text)'}}>AI Copilot</span>
-                <span className="tag open" style={{padding:'1px 6px', fontSize:'9.5px', textTransform:'uppercase'}}>Local · Evidence-based</span>
+                <span className="tag open" style={{padding:'1px 6px', fontSize:'9.5px', textTransform:'uppercase'}}>Gemini · Evidence-based</span>
               </div>
               <button className="neu-btn ghost transition" style={{padding:'2px 7px', fontSize:'11px'}} onClick={() => setAiPanelCollapsed(true)}>✕</button>
             </div>
 
-            <div className="graph-ai-body">
+            <div className="graph-ai-body" ref={aiBody} aria-live="polite">
               {aiChatLog.map((msg, idx) => (
                 <div key={idx} className={`ai-msg ${msg.sender === 'user' ? 'user' : 'bot'}`} style={msg.error ? {borderColor:'rgba(239, 68, 68, 0.4)'} : {}}>
                   <div className="ai-msg-hdr flex items-center gap-1.5">
@@ -694,7 +721,7 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
                   {msg.chips && (
                     <div className="ai-quick-chips flex flex-wrap gap-1.5 mt-2">
                       {msg.chips.map((c, cIdx) => (
-                        <button key={cIdx} type="button" className="ai-chip transition" onClick={() => handleAiQuerySubmit(null, c.replace(/^[^a-zA-Z0-9]+/, ''))}>
+                        <button key={cIdx} type="button" disabled={aiQuerying} className="ai-chip transition" onClick={() => handleAiQuerySubmit(null, c)}>
                           {c}
                         </button>
                       ))}
@@ -706,16 +733,18 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
                 <div className="ai-msg bot">
                   <div className="ai-msg-hdr flex items-center gap-1.5">
                     <div className="status-dot" style={{width:'8px', height:'8px', background:'var(--accent)', animation:'pulse 1s infinite'}}></div>
-                    <span>AI is analyzing topology…</span>
+                    <span>Gemini is responding…</span>
                   </div>
-                  <div style={{fontSize:'11.5px', color:'var(--text-faint)'}}>Correlating nodes, transactions, and hidden links</div>
+                  <div style={{fontSize:'11.5px', color:'var(--text-faint)'}}>Reading authorized case context and conversation history</div>
                 </div>
               )}
             </div>
 
             <div className="graph-ai-footer">
+              {aiValidation && <div role="alert" className="text-xs mb-2">{aiValidation}</div>}
+              {retryQuestion && <button type="button" className="neu-btn ghost mb-2" disabled={aiQuerying} onClick={() => void handleAiQuerySubmit(null, retryQuestion)}>Retry last message</button>}
               <form onSubmit={handleAiQuerySubmit} className="flex gap-1.5 w-full m-0" style={{display:'flex', gap:'6px', width:'100%', margin:0}}>
-                <textarea rows={2} className="control" style={{fontSize:'12px', padding:'7px 10px', flex:1,resize:'vertical'}} placeholder={caseFilter ? 'Ask about this case’s records… (Enter to send)' : 'Select a case to ask a question…'} value={aiInput} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleAiQuerySubmit(); } }} />
+                <textarea aria-label="Message Gemini Copilot" maxLength={6000} rows={2} className="control" style={{fontSize:'12px', padding:'7px 10px', flex:1,resize:'vertical'}} placeholder={caseFilter ? 'Ask about this case’s records… (Enter to send)' : 'Ask about your authorized records… (Enter to send)'} value={aiInput} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void handleAiQuerySubmit(); } }} />
                 <button type="submit" className="neu-btn primary transition" disabled={aiQuerying} style={{padding:'0 12px', fontSize:'12px'}}>{aiQuerying ? '…' : 'Ask'}</button>
               </form>
             </div>
@@ -734,7 +763,7 @@ export function GraphExplorerModule({ cases, selectedCase, setSelectedCase, open
           Visible graph: <b>{visibleGraph.nodes.length}</b> nodes · <b>{visibleGraph.edges.length}</b> relationships · Overview cap {limit}; select a node and enable focus to expand its neighborhood.
         </div>
         <div className="text-xs mt-2" style={{display:'flex',gap:12,flexWrap:'wrap',color:'var(--text-dim)'}}>
-          <span>● <b style={{color:'#3b82f6'}}>Person</b></span><span>■ <b style={{color:'#8b5cf6'}}>Organization</b></span><span>● <b style={{color:'#06b6d4'}}>Identifiers</b></span><span>◆ <b style={{color:'#f59e0b'}}>Events / transactions</b></span><span>● <b style={{color:'#22c55e'}}>Location</b></span><span>● <b style={{color:'#94a3b8'}}>Other</b></span>
+          <span style={{color:'#00B887'}}>● Victim</span><span style={{color:'#C8203B'}}>● Suspect</span><span style={{color:'#2788E8'}}>● Witness</span><span style={{color:'#8739D0'}}>● Person of interest</span><span style={{color:'#E7B94F'}}>● Conflicting roles</span><span style={{color:'#73818D'}}>● Unknown role</span><span>■ Organization</span><span>● Identifiers</span><span>◆ Events / transactions</span>
         </div>
       </div>
 

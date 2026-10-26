@@ -60,6 +60,34 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+
+@app.middleware("http")
+async def case_session_context(request: Request, call_next):
+    from backend.case_access import current_officer, resolve_session, require_case
+    from fastapi import HTTPException
+    from urllib.parse import unquote
+    if settings.STORAGE_BACKEND.lower() != "sqlite":
+        return await call_next(request)
+    authorization = request.headers.get("authorization", "")
+    badge = resolve_session(authorization[7:]) if authorization.startswith("Bearer ") else None
+    if settings.APP_ENV.lower() == "production" and request.url.path.startswith("/api/") and not request.url.path.startswith("/api/auth/") and request.url.path != "/api/health" and not badge:
+        return JSONResponse(status_code=401, content={"detail": "Sign in to access case evidence."})
+    context = current_officer.set(badge)
+    try:
+        case_id = request.query_params.get("case_id")
+        if request.url.path.startswith("/api/cases/"):
+            candidate = unquote(request.url.path[len("/api/cases/"):].split("/")[0])
+            if candidate not in {"ingest", "reset", "reset-database"}: case_id = candidate
+        # The HTML shell has no bearer header on browser navigation. Enforce
+        # ownership on data APIs; React sends the stored token on those requests.
+        if case_id and request.url.path.startswith("/api/"):
+            require_case(case_id)
+        return await call_next(request)
+    except HTTPException as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    finally:
+        current_officer.reset(context)
+
 # Same-origin deployment is the default. For a separately hosted frontend,
 # set CORS_ORIGINS to a comma-separated list of exact origins in the service
 # environment. Never combine wildcard origins with credentialed requests.
@@ -91,6 +119,14 @@ if assets_path.exists():
 # Global Error Handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    if request.url.path == "/api/graph/ai-query":
+        # Chat validation errors otherwise include entire input messages/history.
+        # Log only structure, and never echo submitted private text in the error.
+        logger.warning("Copilot payload validation failed (%s errors)", len(exc.errors()))
+        return JSONResponse(status_code=422, content={"detail": [
+            {"loc": list(error["loc"]), "msg": error["msg"], "type": error["type"]}
+            for error in exc.errors()
+        ]})
     logger.warning(f"Request validation failed on {request.url.path}: {exc.errors()}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Request
 from neo4j.exceptions import ServiceUnavailable
 
 from backend.database import db
@@ -122,40 +122,27 @@ def get_relationship(relationship_id: str):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(se))
 
 
-@router.post("/api/graph/ai-query", summary="Interactive AI Graph Copilot Query with Gemini")
-def ask_graph_copilot(payload: dict):
-    """
-    Accepts natural-language queries about the visible graph topology from investigators
-    and returns a structured deductive intelligence response using Gemini 2.5 Flash
-    (with heuristic fallback).
-    """
+from backend.models.copilot import CopilotRequest
+
+
+@router.post("/api/graph/ai-query", summary="Authenticated free-form Gemini Copilot conversation")
+def ask_graph_copilot(payload: CopilotRequest, request: Request):
     from backend.services.gemini_service import GeminiService
-    question = payload.get("question", "").strip()
+    from backend.services.copilot_context import build_copilot_context
+    from backend.case_access import current_officer, resolve_session
+    question = payload.question.strip()
     if not question:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Question is required.")
-    
-    case_id = payload.get("case_id") or None
-    if settings.STORAGE_BACKEND.lower() == "sqlite":
-        result = local_store.copilot_answer(question, case_id)
-        return {**result, "ai_model": "local-deterministic-qa", "key_findings": result.get("facts", [])}
-    nodes_count = payload.get("nodes_count")
-    edges_count = payload.get("edges_count")
-    selected_node_id = payload.get("selected_node_id")
-
-    try:
-        with db.get_session() as session:
-            return GeminiService.answer_graph_query(
-                session=session,
-                question=question,
-                case_id=case_id,
-                nodes_count=nodes_count,
-                edges_count=edges_count,
-                selected_node_id=selected_node_id
-            )
-    except ServiceUnavailable as se:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(se))
-    except Exception as e:
-        logger.error(f"Error querying graph copilot: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    officer = current_officer.get()
+    # Neo4j routes do not use the SQLite middleware context, but Copilot still
+    # requires the same server-issued login session and explicit ownership check.
+    if not officer:
+        authorization = request.headers.get("authorization", "")
+        officer = resolve_session(authorization[7:]) if authorization.startswith("Bearer ") else None
+    if not officer:
+        raise HTTPException(status_code=401, detail="Sign in to use the Gemini Copilot.")
+    case_id = (payload.case_id or "").strip() or None
+    context = build_copilot_context(case_id, officer, question, payload.selected_node_id)
+    return GeminiService.chat(question, context, payload.history)
 
 

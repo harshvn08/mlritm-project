@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as vis from 'vis-network/standalone';
 import { API, esc, LABEL_COLOR, getNodeLevel, getDeterministicSeed, Case, GraphNode, GraphEdge, ThemeMode, OfficerSession, addOfficerUploadedCaseId } from '../services/api';
-import { FileStore, LocalCaseStore, UploadedCaseFile } from '../services/fileStore';
+import { FileStore, UploadedCaseFile } from '../services/fileStore';
 
 export interface OverlappingCase {
   case_id: string;
@@ -72,6 +72,7 @@ export function CaseRegistryModule({
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [caseDetail, setCaseDetail] = useState<Case | null>(null);
   const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
+  const [reprocessing, setReprocessing] = useState(false);
 
   // Ingest New Case Modal State
   const [isIngestModalOpen, setIsIngestModalOpen] = useState<boolean>(false);
@@ -175,7 +176,8 @@ export function CaseRegistryModule({
             nodeBg = '#6366f1';
           } else if (isPerson) {
             nodeSize = 26;
-            nodeBg = '#3b82f6';
+            const role = String(n.properties?.role || 'unknown');
+            nodeBg = n.properties?.role_conflict ? '#E7B94F' : role === 'victim' ? '#00B887' : role === 'suspect' ? '#C8203B' : role === 'witness' ? '#2788E8' : role === 'person_of_interest' ? '#8739D0' : '#73818D';
           } else if (isPhone) {
             nodeSize = 24;
             nodeBg = '#f97316';
@@ -605,7 +607,7 @@ export function CaseRegistryModule({
       for (const f of attachFiles) {
         formData.append('files', f);
       }
-      await API.send<{ case_id?: string }>(`/api/v1/ingest?case_id=${encodeURIComponent(selectedCase)}`, {
+      await API.send<{ case_id?: string }>(`/api/v1/ingest?existing_case=true&case_id=${encodeURIComponent(selectedCase)}`, {
         method: 'POST',
         body: formData,
         form: true
@@ -637,34 +639,13 @@ export function CaseRegistryModule({
   // Get uploaded files for the selected case from FileStore, plus fallback generated entries from evidences
   const caseFiles: UploadedCaseFile[] = useMemo(() => {
     if (!caseDetail) return [];
-    const directFiles = FileStore.getByCaseId(caseDetail.case_id);
-    if (directFiles.length > 0) return directFiles;
-
-    // Fallback: If case was loaded from backend without local upload, build inspectable documents from collected evidences
-    const fallbacks: UploadedCaseFile[] = [];
-    if (caseDetail.evidences_collected && caseDetail.evidences_collected.length > 0) {
-      caseDetail.evidences_collected.forEach((ev, idx) => {
-        const isCdr = ev.name.toLowerCase().includes('cdr') || ev.name.toLowerCase().includes('phone');
-        const isFin = ev.name.toLowerCase().includes('bank') || ev.name.toLowerCase().includes('transaction');
-        const ext: 'csv' | 'pdf' | 'txt' = isCdr || isFin ? 'csv' : 'txt';
-        const sampleContent = isCdr
-          ? `caller_msisdn,callee_msisdn,timestamp,call_duration_seconds,tower_cell_id\n+919876543210,+919988776655,2026-09-02 14:22:10,340,CELL-TOWER-MUM-09\n+919876543210,+919123456789,2026-09-02 18:45:00,120,CELL-TOWER-DEL-04\n+919988776655,+919876543210,2026-09-03 09:12:44,510,CELL-TOWER-MUM-09`
-          : isFin
-          ? `transaction_id,origin_account,beneficiary_account,amount_inr,status,timestamp\nTXN-902188,ACC-HDFC-99120,ACC-ICICI-00412,450000,COMPLETED,2026-09-02 15:30:00\nTXN-902189,ACC-ICICI-00412,ACC-AXIS-77810,250000,COMPLETED,2026-09-02 16:15:20`
-          : `OFFICIAL FIRST INFORMATION REPORT & CASE RECORD\nCASE DESIGNATION: ${caseDetail.case_name || caseDetail.case_id}\nFIR NUMBER: ${caseDetail.fir_number || 'FIR-2026-UNKNOWN'}\nDATE: ${caseDetail.date || '2026-09-02'}\nLEAD INVESTIGATOR: ${caseDetail.lead_investigator || 'Special Investigation Team'}\nCRIME CATEGORY: ${caseDetail.category_of_crime || caseDetail.case_type || 'Organized Crime'}\n\nSYNOPSIS:\n${caseDetail.summary || 'Evidence docket registered in criminal intelligence knowledge graph.'}`;
-
-        fallbacks.push({
-          id: `evidence_doc_${idx}`,
-          case_id: caseDetail.case_id,
-          file_name: `${ev.name.replace(/\s+/g, '_')}.${ext}`,
-          file_type: ext,
-          file_size: `${(idx + 1) * 24 + 12} KB`,
-          uploaded_at: caseDetail.date ? `${caseDetail.date} 10:00:00 UTC` : '2026-09-02 10:00:00 UTC',
-          content: sampleContent
-        });
-      });
-    }
-    return fallbacks;
+    const inventory = caseDetail.documents as Array<{ document_id: string; filename: string; content: string; created_at: string; sha256: string }> | undefined;
+    return (inventory || []).map(document => ({
+      id: document.document_id, case_id: caseDetail.case_id, file_name: document.filename,
+      file_type: document.filename.toLowerCase().endsWith('.csv') ? 'csv' as const : 'txt' as const,
+      file_size: FileStore.formatBytes(new Blob([document.content]).size),
+      uploaded_at: document.created_at, content: document.content, sha256: document.sha256,
+    }));
   }, [caseDetail]);
 
   // Parse CSV content for structured viewer
@@ -855,6 +836,25 @@ export function CaseRegistryModule({
             </div>
 
             <div className="flex items-center gap-2">
+              <button className="neu-btn ghost text-xs" onClick={async () => {
+                try {
+                  const report = await API.get(`/api/cases/${encodeURIComponent(selectedCase!)}/report`);
+                  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'}));
+                  const anchor = document.createElement('a');
+                  anchor.href = url; anchor.download = `${selectedCase}-report.json`; anchor.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                } catch (error) { addToast((error as Error).message, 'err'); }
+              }}>Export Case Report</button>
+              <button className="neu-btn ghost text-xs" disabled={reprocessing} onClick={async () => {
+                setReprocessing(true);
+                try {
+                  await API.post(`/api/cases/${encodeURIComponent(selectedCase!)}/reprocess`);
+                  await loadCaseDetail(selectedCase!);
+                  await fetchCases();
+                  addToast('Analysis rebuilt from preserved case evidence.', 'ok');
+                } catch (error) { addToast((error as Error).message, 'err'); }
+                finally { setReprocessing(false); }
+              }}>{reprocessing ? 'Reprocessing…' : 'Reprocess Stored Evidence'}</button>
               <button
                 className="neu-btn primary text-xs"
                 onClick={() => setIsAttachModalOpen(true)}
@@ -975,6 +975,13 @@ export function CaseRegistryModule({
 
               {/* 4-Column Forensic Intelligence Grid */}
               <div className="inspect-grid">
+                {(['witnesses', 'persons_of_interest', 'role_conflicts'] as const).map(field => {
+                  const people = (caseDetail[field] || []) as Array<{name: string; roles: string[]}>;
+                  return <div className="inspect-subcard" key={field}>
+                    <div className="inspect-subcard-title">{field === 'witnesses' ? 'Witnesses' : field === 'persons_of_interest' ? 'Persons of Interest' : 'Role Conflicts — Review Required'}</div>
+                    {people.length ? people.map((person, index) => <div className="actor-pill" key={index}>{person.name}<span className="tag plain">{person.roles.join(', ')}</span></div>) : <div className="text-xs" style={{color: 'var(--text-faint)'}}>No explicit records.</div>}
+                  </div>;
+                })}
                 {/* 1. Primary Suspects */}
                 <div className="inspect-subcard">
                   <div className="inspect-subcard-title">
@@ -1042,15 +1049,15 @@ export function CaseRegistryModule({
                   <div className="inspect-subcard-content text-xs flex flex-col gap-2">
                     <div className="flex justify-between">
                       <span style={{ color: 'var(--text-faint)' }}>FIR Number:</span>
-                      <span className="mono font-bold">{esc(caseDetail.fir_number || 'N/A')}</span>
+                      <span className="mono font-bold">{esc(caseDetail.fir_number || 'Not recorded')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span style={{ color: 'var(--text-faint)' }}>Crime Classification:</span>
-                      <span className="font-semibold">{esc(caseDetail.category_of_crime || caseDetail.case_type || 'N/A')}</span>
+                      <span className="font-semibold">{esc(caseDetail.category_of_crime || caseDetail.case_type || 'Not recorded')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span style={{ color: 'var(--text-faint)' }}>Lead Officer:</span>
-                      <span>{esc(caseDetail.lead_investigator || 'Special Investigation Unit')}</span>
+                      <span>{esc(caseDetail.lead_investigator || 'Not recorded')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span style={{ color: 'var(--text-faint)' }}>Total Graph Nodes:</span>

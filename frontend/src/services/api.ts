@@ -92,6 +92,7 @@ export type ViewId = 'home' | 'overview' | 'graph' | 'search' | 'path' | 'rankin
 export type ThemeMode = 'dark' | 'light';
 
 export interface OfficerSession {
+  accessToken?: string;
   badgeNumber: string;
   officerName: string;
   department: string;
@@ -179,6 +180,12 @@ interface SendOptions extends RequestInit {
 }
 
 export const API = {
+  authHeaders(): Record<string, string> {
+    try {
+      const session = JSON.parse(localStorage.getItem('atlas_officer_session') || 'null');
+      return session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {};
+    } catch { return {}; }
+  },
   // A blank setting keeps requests same-origin (the production default).
   // VITE_API_BASE_URL can point a separately hosted frontend at its API.
   url(path: string): string {
@@ -200,7 +207,7 @@ export const API = {
     return `HTTP ${status}`;
   },
   async get<T = unknown>(url: string): Promise<T> {
-    const r = await fetch(this.url(url), { headers: { 'Accept': 'application/json' } });
+    const r = await fetch(this.url(url), { headers: { 'Accept': 'application/json', ...this.authHeaders() } });
     let d: T | null;
     try { d = await r.json(); } catch { d = null; }
     if (!r.ok) throw new Error(this.formatError(d as unknown as ApiErrorDetail, r.status));
@@ -213,7 +220,7 @@ export const API = {
     });
   },
   async send<T = unknown>(url: string, opts: SendOptions = {}): Promise<T> {
-    const headers: Record<string, string> = opts.form ? {} : { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { ...this.authHeaders(), ...(opts.form ? {} : { 'Content-Type': 'application/json' }) };
     if (opts.headers) {
       const incomingHeaders = opts.headers as Record<string, string>;
       Object.assign(headers, incomingHeaders);

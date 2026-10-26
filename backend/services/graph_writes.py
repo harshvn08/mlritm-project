@@ -263,6 +263,11 @@ PROTECTED_PERSON_FIELDS = {
 
 def person_row(x: Person) -> Dict[str, Any]:
     safe_props = {k: v for k, v in (x.properties or {}).items() if k not in PROTECTED_PERSON_FIELDS}
+    # Neo4j properties cannot contain lists of maps. Retain the source assertions
+    # as JSON rather than failing the entire ingestion transaction.
+    if isinstance(safe_props.get("role_provenance"), list):
+        import json
+        safe_props["role_provenance"] = json.dumps(safe_props["role_provenance"], ensure_ascii=False)
     return {
         "person_id": x.person_id,
         "name": x.name,

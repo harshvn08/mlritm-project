@@ -19,7 +19,7 @@ class CaseMetadata(BaseModel):
 class PersonEntity(BaseModel):
     id: str = Field(description="Unique person entity ID e.g. P_701")
     name: str = Field(description="Full name of person")
-    status: str = Field(default="Suspect", description="Status e.g. Suspect, Victim, Complainant, Intermediary")
+    status: str = Field(default="unknown", description="Source-supported person role; unknown when unspecified")
     age: Optional[int] = Field(default=None, description="Age if available")
     gender: Optional[str] = Field(default=None, description="Gender")
     address: Optional[str] = Field(default=None, description="Address")

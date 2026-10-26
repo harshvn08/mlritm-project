@@ -1,0 +1,9 @@
+mapping_id,entity_name,entity_type,identifier,relationship,related_entity,source_file,record_reference,confidence,status
+MAP-001,Vikram Rao,person,PERSON-VICTIM-001,victim_in_case,MUR-2026-041,FIR-MUR-2026-041.txt,FIR victim field,0.99,explicit
+MAP-002,Arjun Mehta,person,9000001102,uses_phone,PHONE-9000001102,cdr_records.csv,CDR-001/003,0.80,synthetic mapping
+MAP-003,Karan Shah,person,9000001103,uses_phone,PHONE-9000001103,cdr_records.csv,CDR-002/003/004/006,0.80,synthetic mapping
+MAP-004,Vikram Rao,person,9000001101,uses_phone,PHONE-9000001101,cdr_records.csv,CDR-001/002/005/006,0.80,synthetic mapping
+MAP-005,Rohit Verma,person,TS00XY0412,associated_with_vehicle,VEHICLE-TS00XY0412,vehicle_movements.csv,VEH-001/002/003,0.65,not proof of driver identity
+MAP-006,Neha Reddy,person,W-001,gave_statement,STATEMENT-W-001,witness_statements.txt,Statement W-001,0.99,statement
+MAP-007,Arjun Mehta,person,PERSON-SUSPECT-A,dispute_with,Vikram Rao,witness_statements.txt,Statement S-001; TX-001,0.90,lead only
+MAP-008,Karan Shah,person,PERSON-SUSPECT-B,financial_transaction_with,Vikram Rao,financial_transactions.csv,TX-003,0.99,transaction exists; purpose unknown

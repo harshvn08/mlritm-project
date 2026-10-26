@@ -37,15 +37,17 @@ def test_local_sqlite_upload_persists_case_graph_and_files(tmp_path, monkeypatch
         assert client.get(f"/api/relationships/{edge['id']}").json()["certainty"] == "observed"
         path = client.get("/api/cases/shortest-path", params={"suspect_name":"Arjun Mehta", "victim_name":"Petra Rao"})
         assert path.status_code == 200 and path.json()["path_length"] == 3, path.text
-        main_suspect = client.post("/api/graph/ai-query", json={"question":"Who is the main suspect?", "case_id":"CASE-LOCAL-TEST"}).json()
+        # The deterministic utility remains independently testable; authenticated
+        # Gemini chat is covered by test_gemini_copilot.py with SDK network mocks.
+        main_suspect = local_store.copilot_answer("Who is the main suspect?", "CASE-LOCAL-TEST")
         assert main_suspect["intent"] == "suspect_safety" and "cannot establish" in main_suspect["answer"].lower()
-        ranking = client.post("/api/graph/ai-query", json={"question":"Which entities are most connected?", "case_id":"CASE-LOCAL-TEST"}).json()
+        ranking = local_store.copilot_answer("Which entities are most connected?", "CASE-LOCAL-TEST")
         assert ranking["intent"] == "degree_ranking" and "1111111111" in ranking["answer"]
-        missing = client.post("/api/graph/ai-query", json={"question":"What information is missing?", "case_id":"CASE-LOCAL-TEST"}).json()
+        missing = local_store.copilot_answer("What information is missing?", "CASE-LOCAL-TEST")
         assert missing["intent"] == "coverage" and "source documents" in missing["answer"]
-        evidence = client.post("/api/graph/ai-query", json={"question":"Which evidence documents mention Arjun Mehta?", "case_id":"CASE-LOCAL-TEST"}).json()
+        evidence = local_store.copilot_answer("Which evidence documents mention Arjun Mehta?", "CASE-LOCAL-TEST")
         assert "synthetic-note.txt" in evidence["answer"]
-        no_case = client.post("/api/graph/ai-query", json={"question":"summarize this case"}).json()
+        no_case = local_store.copilot_answer("summarize this case", None)
         assert no_case["intent"] == "case_required"
         assert client.post("/api/v1/ingest?case_id=CASE-LOCAL-TEST", data={"case_title": "Synthetic local workflow"}, files=[
             ("files", ("bad.exe", b"nope", "application/octet-stream")),
@@ -115,10 +117,10 @@ def test_structured_atlas_registers_create_typed_evidence_graph_and_copilot_answ
             ("What information remains unverified?", "WITNESS_REPORTED", "witness.txt"),
         ]
         for question, expected, source in queries:
-            answer = client.post("/api/graph/ai-query", json={"question": question, "case_id": case_id}).json()
+            answer = local_store.copilot_answer(question, case_id)
             assert expected in answer["answer"]
             assert source in answer["answer"]
-        absent = client.post("/api/graph/ai-query", json={"question": "Who is the driver of Vehicle V-999?", "case_id": case_id}).json()
+        absent = local_store.copilot_answer("Who is the driver of Vehicle V-999?", case_id)
         assert "no stored driver assignment" in absent["answer"].lower()
         persisted = client.get("/api/graph", params={"case_id": case_id}).json()
         assert persisted["total_edges"] == 5

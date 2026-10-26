@@ -14,6 +14,29 @@ from backend import local_store
 router = APIRouter(prefix="/api/cases", tags=["Cases & Ingestion"])
 
 
+@router.post("/{case_id}/reprocess", summary="Reprocess preserved evidence for this case")
+def reprocess_case(case_id: str):
+    if settings.STORAGE_BACKEND.lower() != "sqlite":
+        raise HTTPException(status_code=501, detail="Stored-file reprocessing is supported by the SQLite evidence store.")
+    try:
+        result = local_store.reprocess_case(case_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")
+    return result
+
+
+@router.get("/{case_id}/report", summary="Export actual case evidence and analysis")
+def case_report(case_id: str):
+    if settings.STORAGE_BACKEND.lower() != "sqlite":
+        raise HTTPException(status_code=501, detail="This report endpoint requires the SQLite evidence store.")
+    case = local_store.case_detail(case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")
+    return {"case": case, "graph": local_store.graph_data(case_id), "limitations": "Roles are source assertions; conflicting roles require analyst review."}
+
+
 @router.post("/ingest", response_model=IngestResponse, summary="Ingest Case Graph JSON")
 def ingest_case(
     response: Response,
